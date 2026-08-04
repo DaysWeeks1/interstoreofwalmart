@@ -48,7 +48,7 @@
       border-radius: 40px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8);
       transition: transform 0.2s ease, background-color 0.2s ease, left 0.3s ease;
-      overflow: hidden; /* Contains the progress line inside rounded corners */
+      overflow: visible; /* Allows glowing outline to expand past border */
     }
 
     #univ-nav {
@@ -75,17 +75,29 @@
       gap: 0.3rem;
     }
 
-    /* --- Audio Progress Line --- */
-    .audio-progress-bar {
+    /* --- Glowing Outer Border SVG Progress Line --- */
+    .progress-border-svg {
       position: absolute;
-      bottom: 0;
+      top: 0;
       left: 0;
-      height: 3px;
-      width: 0%;
-      background-color: var(--isw-blue);
-      border-radius: 0 2px 2px 0;
-      transition: width 0.1s linear;
-      box-shadow: 0 0 6px rgba(0, 113, 220, 0.6);
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* Clicking through SVG to buttons */
+      overflow: visible;
+      border-radius: 40px;
+    }
+
+    .progress-border-path {
+      fill: none;
+      stroke: var(--isw-blue);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      /* Glowing effect for the blue line */
+      filter: drop-shadow(0px 0px 4px rgba(0, 113, 220, 0.9)) drop-shadow(0px 0px 8px rgba(0, 113, 220, 0.6));
+      /* Rotate so stroke begins at the bottom-center */
+      transform-origin: center;
+      transform: rotate(90deg);
+      transition: stroke-dashoffset 0.1s linear;
     }
 
     .univ-nav-btn {
@@ -99,6 +111,7 @@
       padding: 0.5rem;
       border-radius: 50%;
       transition: background 0.2s, color 0.2s, transform 0.1s;
+      z-index: 2;
     }
 
     .univ-nav-btn:hover {
@@ -399,6 +412,9 @@
 
   <!-- Universal Navigation Bar (Left Top - Signed In) -->
   <div id="univ-nav" class="glass-bar">
+    <svg class="progress-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <rect class="progress-border-path" x="1.5" y="1.5" width="97" height="97" rx="20" ry="20" />
+    </svg>
     <button class="univ-nav-btn" id="nav-logout-btn" title="Log Out">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
     </button>
@@ -412,11 +428,10 @@
 
   <!-- Standalone Audio Bar (Left Top - Signed Out / Login Page) -->
   <div id="standalone-audio-container" class="glass-bar">
-    <!-- Audio controls group gets inserted here dynamically -->
+    <svg class="progress-border-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <rect class="progress-border-path" x="1.5" y="1.5" width="97" height="97" rx="20" ry="20" />
+    </svg>
   </div>
-
-  <!-- Shared Audio Progress Line Element -->
-  <div id="audio-progress-bar" class="audio-progress-bar"></div>
 
   <!-- Audio Controls Group (Shared Template) -->
   <div id="audio-controls-group">
@@ -475,7 +490,6 @@
     <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
 
     <div class="grid-container">
-      <button class="hub-card" data-tile="terms">Terms & Conditions</button>
       <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
       <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
       <button class="hub-card" data-tile="food">Order Food</button>
@@ -485,6 +499,7 @@
       <button class="hub-card" data-tile="assistant">ISW Assistant</button>
       <button class="hub-card" data-tile="flyer">Funny Flyer</button>
       <button class="hub-card" data-tile="productions">ISW Productions</button>
+      <button class="hub-card" data-tile="terms">Terms & Conditions</button>
     </div>
   </div>
 
@@ -578,12 +593,12 @@
   let currentAudioIndex = 0;
   const audioPlayer = document.getElementById('bg-audio-player');
   const audioControlsGroup = document.getElementById('audio-controls-group');
-  const audioProgressBar = document.getElementById('audio-progress-bar');
   const audioToggleBtn = document.getElementById('audio-toggle-btn');
   const audioSkipBtn = document.getElementById('audio-skip-btn');
   const iconPlay = document.getElementById('icon-play');
   const iconPause = document.getElementById('icon-pause');
   const standaloneAudioContainer = document.getElementById('standalone-audio-container');
+  const univNav = document.getElementById('univ-nav');
 
   function updateAudioButtonState(isPlaying) {
     if (isPlaying) {
@@ -607,15 +622,28 @@
     });
   }
 
-  // Track playback progress & update progress line
-  audioPlayer.addEventListener('timeupdate', () => {
-    if (audioPlayer.duration) {
-      const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-      audioProgressBar.style.width = `${progressPercent}%`;
-    } else {
-      audioProgressBar.style.width = '0%';
+  // Synchronize Glowing Border Progress around active Glass Bar
+  function updateBorderProgress() {
+    const activeContainer = univNav.style.display !== 'none' ? univNav : standaloneAudioContainer;
+    const path = activeContainer.querySelector('.progress-border-path');
+
+    if (path) {
+      const pathLength = path.getTotalLength();
+      path.style.strokeDasharray = pathLength;
+
+      if (audioPlayer.duration) {
+        const progressPercent = audioPlayer.currentTime / audioPlayer.duration;
+        const offset = pathLength * (1 - progressPercent);
+        path.style.strokeDashoffset = offset;
+      } else {
+        path.style.strokeDashoffset = pathLength;
+      }
     }
-  });
+  }
+
+  // Track playback progress
+  audioPlayer.addEventListener('timeupdate', updateBorderProgress);
+  audioPlayer.addEventListener('loadedmetadata', updateBorderProgress);
 
   // Skip to next track in playlist
   function skipToNextTrack() {
@@ -647,10 +675,10 @@
     skipToNextTrack();
   });
 
-  // Move Audio Bar & Progress Line to correct parent element
+  // Move Audio Controls inside correct container element
   function attachAudioControls(targetContainer) {
     targetContainer.appendChild(audioControlsGroup);
-    targetContainer.appendChild(audioProgressBar);
+    setTimeout(updateBorderProgress, 50); // Sync path on container shift
   }
 
   // Auto-start playback on initial page load
@@ -659,7 +687,7 @@
     playTrack(currentAudioIndex);
   });
 
-  // Handle browser autoplay policy (play on first click anywhere if autoplay was blocked)
+  // Handle browser autoplay policy
   const handleFirstInteraction = () => {
     if (audioPlayer.paused && audioPlayer.currentTime === 0) {
       playTrack(currentAudioIndex);
@@ -680,7 +708,6 @@
   const statusMsg = document.getElementById('status-msg');
   const submitBtn = document.getElementById('submit-btn');
 
-  const univNav = document.getElementById('univ-nav');
   const settingsNavBtnContainer = document.getElementById('settings-nav-btn-container');
   const settingsToggleBtn = document.getElementById('settings-toggle-btn');
   const iconGear = document.getElementById('icon-gear');
