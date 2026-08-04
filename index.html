@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ISW - International Store of Walmart</title>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
   <style>
     :root {
       --isw-blue: #0071dc;
@@ -245,7 +245,7 @@
         </div>
 
         <div class="recaptcha-container">
-          <div class="g-recaptcha" data-sitekey="6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60"></div>
+          <div id="recaptcha-element"></div>
         </div>
 
         <button type="button" class="btn-submit" id="submit-btn">Sign In</button>
@@ -304,10 +304,23 @@
         isTokenAutoRefreshEnabled: true
       });
     } catch (err) {
-      console.warn("App Check not enabled for this key/domain, continuing auth logic.");
+      console.warn("App Check skipped:", err);
     }
 
     const auth = getAuth(app);
+
+    let recaptchaWidgetId = null;
+
+    window.addEventListener('load', () => {
+      const checkRecaptcha = setInterval(() => {
+        if (typeof grecaptcha !== 'undefined' && grecaptcha.render) {
+          clearInterval(checkRecaptcha);
+          recaptchaWidgetId = grecaptcha.render('recaptcha-element', {
+            'sitekey': '6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'
+          });
+        }
+      }, 100);
+    });
 
     const verificationView = document.getElementById('verification-view');
     const hubView = document.getElementById('hub-view');
@@ -327,6 +340,8 @@
     });
 
     async function handleSignIn() {
+      statusMsg.style.display = 'none';
+      
       const emailInput = document.getElementById('user-email').value.trim();
       const passwordInput = document.getElementById('user-password').value;
 
@@ -336,8 +351,12 @@
         return;
       }
 
-      const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
-      if (typeof grecaptcha !== 'undefined' && !recaptchaResponse) {
+      let recaptchaResponse = '';
+      if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+        recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
+      }
+
+      if (!recaptchaResponse) {
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Please check the "I\'m not a robot" box.';
         return;
@@ -348,6 +367,7 @@
         statusMsg.className = 'status-msg success';
         statusMsg.textContent = 'Signed in successfully!';
       } catch (error) {
+        console.error("Firebase Sign In Error:", error);
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Authentication failed: Invalid email or password.';
       }
