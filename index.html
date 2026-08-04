@@ -473,29 +473,38 @@
     navIndex++;
     renderState(state);
   }
+    
+async function openFirestoreLink(fieldName) {
+  
+  const newTab = window.open('about:blank', '_blank');
 
-  /* Helper to fetch links from Firestore (private_links -> hub_access -> fieldName) */
-  async function openFirestoreLink(fieldName) {
-    try {
-      const docRef = doc(db, "private_links", "hub_access");
-      const docSnap = await getDoc(docRef);
+  try {
+    const docRef = doc(db, "private_links", "hub_access");
+    const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists() && docSnap.data()[fieldName]) {
-        let rawLink = docSnap.data()[fieldName].trim();
+    if (docSnap.exists() && docSnap.data()[fieldName]) {
+      let rawLink = docSnap.data()[fieldName].trim();
 
-        if (!/^https?:\/\//i.test(rawLink)) {
-          rawLink = 'https://' + rawLink;
-        }
-
-        window.open(rawLink, '_blank');
-      } else {
-        alert(`Link for ${fieldName} could not be found in Firebase.`);
+      if (!/^https?:\/\//i.test(rawLink)) {
+        rawLink = 'https://' + rawLink;
       }
-    } catch (error) {
-      console.error(`Error fetching ${fieldName} link:`, error);
-      alert("Failed to load link. Please try again.");
+
+      
+      if (newTab) {
+        newTab.location.href = rawLink;
+      } else {
+        window.location.href = rawLink;
+      }
+    } else {
+      if (newTab) newTab.close();
+      alert(`Link for ${fieldName} could not be found in Firebase.`);
     }
+  } catch (error) {
+    if (newTab) newTab.close();
+    console.error(`Error fetching ${fieldName} link:`, error);
+    alert("Failed to load link. Please try again.");
   }
+}
 
   function renderTileView(state) {
     if (state === 'newsletter') {
@@ -533,25 +542,17 @@
     }
   }
 
-  /* Event Listeners */
+ /* Event Listeners */
 document.querySelectorAll('.hub-card').forEach(card => {
   card.addEventListener('click', () => {
     const tileAttr = card.getAttribute('data-tile');
-    const textContent = card.textContent.trim().toLowerCase();
 
-    
-    if (tileAttr === 'food' || textContent.includes('food')) {
+    if (tileAttr === 'food') {
       openFirestoreLink('orderFood');
-    
-    
-    } else if (tileAttr === 'card' || textContent.includes('card')) {
+    } else if (tileAttr === 'card') {
       openFirestoreLink('getCard');
-    
-    
-    } else if (tileAttr === 'media' || textContent.includes('media')) {
+    } else if (tileAttr === 'media') {
       openFirestoreLink('iswMedia');
-    
-    
     } else {
       const stateKey = tileAttr || card.textContent.trim();
       pushNavState(stateKey);
