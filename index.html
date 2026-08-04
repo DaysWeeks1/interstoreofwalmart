@@ -843,6 +843,28 @@
         pushNavState('interactive-download');
       });
 
+    } else if (state === 'legal') {
+      tileTitle.textContent = "Legal Action";
+      tileBody.innerHTML = `
+        <div style="max-width: 600px; text-align: center; margin-bottom: 2rem;">
+          <p style="color: var(--isw-blue); font-size: 1.1rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem;">
+            Have you encountered legal action from the International Store of Walmart? Don't worry, as long as you comply, it won't be hard. You may have been sent a cease and desist letter. If so, then you can click the button that says: "Compliance with Cease and Desist" to confirm that you will comply.
+          </p>
+          <div class="grid-container" style="max-width: 600px;">
+            <button class="hub-card" id="btn-cease-desist">Compliance with Cease and Desist</button>
+            <button class="hub-card" id="btn-legal-team">Message from our Legal Team</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('btn-cease-desist').addEventListener('click', () => {
+        openFirestoreLink('complianceForm');
+      });
+
+      document.getElementById('btn-legal-team').addEventListener('click', () => {
+        openFirestoreLink('legalVideo');
+      });
+
     } else if (state === 'interactive-download') {
       tileTitle.textContent = "Interactive Download";
       tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
