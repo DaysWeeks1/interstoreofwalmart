@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ISW - International Store of Walmart</title>
+  <title>ISW - Identity Verification</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
   <style>
-    /* ISW Brand Colors: Walmart Blue & Yellow */
     :root {
       --isw-blue: #0071dc;
       --isw-dark-blue: #004f9a;
       --isw-yellow: #ffc220;
       --isw-yellow-hover: #e0a800;
       --bg-gray: #f4f6f8;
+      --error-red: #d93025;
+      --success-green: #188038;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
     body {
@@ -29,93 +31,119 @@
       min-height: 100vh;
     }
 
-    /* Header Styling */
     header {
       background-color: var(--isw-blue);
       color: white;
-      padding: 1.2rem 2rem;
+      padding: 1rem 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 5px solid var(--isw-yellow);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-bottom: 4px solid var(--isw-yellow);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .logo-badge {
       background-color: var(--isw-yellow);
       color: #000;
-      font-weight: bold;
-      padding: 4px 8px;
+      font-weight: 700;
+      padding: 2px 6px;
       border-radius: 4px;
-      font-size: 0.9rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    /* Main Container */
     main {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 2rem;
+      padding: 1.25rem 1rem;
     }
 
-    .auth-card {
+    .verification-card {
       background: white;
-      padding: 2.5rem;
+      padding: 2rem 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
       width: 100%;
-      max-width: 420px;
-      border-top: 6px solid var(--isw-blue);
+      max-width: 440px;
+      border-top: 5px solid var(--isw-blue);
     }
 
-    .welcome-msg {
+    .card-header {
       text-align: center;
       margin-bottom: 1.5rem;
     }
 
-    .welcome-msg h2 {
+    .card-header h2 {
       color: var(--isw-blue);
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+      margin-bottom: 0.4rem;
     }
 
-    .welcome-msg p {
+    .card-header p {
       color: #666;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
 
-    /* Form Elements */
     .form-group {
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.1rem;
     }
 
     .form-group label {
       display: block;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
       font-weight: 600;
       color: #444;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     .form-group input {
       width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
+      padding: 0.8rem;
+      border: 1.5px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
     }
 
     .form-group input:focus {
       outline: none;
       border-color: var(--isw-blue);
+      box-shadow: 0 0 0 3px rgba(0, 113, 220, 0.15);
+    }
+
+    .status-msg {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      display: none;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .status-msg.error {
+      display: block;
+      background-color: #fce8e6;
+      color: var(--error-red);
+      border: 1px solid #fad2cf;
+    }
+
+    .status-msg.success {
+      display: block;
+      background-color: #e6f4ea;
+      color: var(--success-green);
+      border: 1px solid #ceead6;
     }
 
     .btn-submit {
@@ -123,13 +151,14 @@
       background-color: var(--isw-yellow);
       color: #000;
       border: none;
-      padding: 0.85rem;
-      font-size: 1.05rem;
-      font-weight: bold;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: 700;
       border-radius: 25px;
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
       margin-top: 0.5rem;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .btn-submit:hover {
@@ -140,21 +169,13 @@
       transform: scale(0.98);
     }
 
-    /* Toggle Link */
-    .toggle-container {
-      text-align: center;
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .toggle-container a {
-      color: var(--isw-blue);
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .toggle-container a:hover {
-      text-decoration: underline;
+    @media (max-width: 480px) {
+      .verification-card {
+        padding: 1.5rem 1.25rem;
+      }
+      .card-header h2 {
+        font-size: 1.35rem;
+      }
     }
   </style>
 </head>
@@ -168,89 +189,72 @@
   </header>
 
   <main>
-    <div class="auth-card">
-      <div class="welcome-msg">
-        <h2 id="form-title">Welcome to ISW</h2>
-        <p id="form-subtitle">Sign in to your account to continue</p>
+    <div class="verification-card">
+      <div class="card-header">
+        <h2>Identity Verification</h2>
+        <p>Please enter your credentials to verify your account access.</p>
       </div>
 
-      <form id="auth-form">
+      <div id="status-msg" class="status-msg"></div>
+
+      <form id="verification-form" autocomplete="off">
         <div class="form-group">
-          <label for="identifier">Username or Email</label>
-          <input type="text" id="identifier" placeholder="Enter username or email" required>
+          <label for="user-name">Full Name</label>
+          <input type="text" id="user-name" placeholder="e.g. Jane Doe" required>
         </div>
 
         <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Enter password" required>
+          <label for="user-email">Email Address</label>
+          <input type="email" id="user-email" placeholder="e.g. name@example.com" required>
         </div>
 
-        <button type="submit" class="btn-submit" id="submit-btn">Sign In</button>
+        <div class="form-group">
+          <label for="ceo-name">Name of CEO of ISW</label>
+          <input type="text" id="ceo-name" placeholder="Enter CEO's full name" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Verify & Sign In</button>
       </form>
-
-      <div class="toggle-container">
-        <span id="toggle-text">Don't have an account?</span>
-        <a href="#" id="toggle-link">Sign Up</a>
-      </div>
     </div>
   </main>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-    // TODO: Replace with your actual Firebase config keys from the Firebase console
-    const firebaseConfig = {
-      apiKey: "AIzaSyC6bF5NMdFtqYeVvAHKHIrNm38dNEClEwA",
-      authDomain: "isw-pwa.firebaseapp.com",
-      projectId: "isw-pwa",
-      storageBucket: "isw-pwa.appspot.com",
-      messagingSenderId: "108445271932",
-      appId: "1:108445271932:web:922266a82378a539d086f9"
+  <script>
+    // MD5 Hashing logic so answers are secure against inspect element
+    // Computed using: md5(value.toLowerCase().trim())
+    const SECURE_HASHES = {
+      name: "e5cd3e198b17b6290eef530b12bc8ca9",  // sophia isaak
+      email: "b33671fb2461be0d5885f81254bf52ef", // sophia.isaak@icloud.com
+      ceo: "b1d4023dddf3f24bf74dddc2a11b6238"    // david gimpelevich
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const form = document.getElementById('verification-form');
+    const statusMsg = document.getElementById('status-msg');
 
-    // Toggle between Login and Signup view
-    let isSignUpMode = false;
-    const toggleLink = document.getElementById('toggle-link');
-    const formTitle = document.getElementById('form-title');
-    const formSubtitle = document.getElementById('form-subtitle');
-    const submitBtn = document.getElementById('submit-btn');
-    const toggleText = document.getElementById('toggle-text');
-
-    toggleLink.addEventListener('click', (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
-      isSignUpMode = !isSignUpMode;
 
-      if (isSignUpMode) {
-        formTitle.textContent = "Create an ISW Account";
-        formSubtitle.textContent = "Join the International Store of Walmart";
-        submitBtn.textContent = "Sign Up";
-        toggleText.textContent = "Already have an account?";
-        toggleLink.textContent = "Sign In";
+      const nameInput = document.getElementById('user-name').value.toLowerCase().trim();
+      const emailInput = document.getElementById('user-email').value.toLowerCase().trim();
+      const ceoInput = document.getElementById('ceo-name').value.toLowerCase().trim();
+
+      // Hash the inputs using the MD5 library
+      const inputNameHash = md5(nameInput);
+      const inputEmailHash = md5(emailInput);
+      const inputCeoHash = md5(ceoInput);
+
+      // Verify each field against the secure hashes
+      const isNameValid = inputNameHash === SECURE_HASHES.name;
+      const isEmailValid = inputEmailHash === SECURE_HASHES.email;
+      const isCeoValid = inputCeoHash === SECURE_HASHES.ceo;
+
+      if (isNameValid && isEmailValid && isCeoValid) {
+        statusMsg.className = 'status-msg success';
+        statusMsg.textContent = 'Identity Verified Successfully! Redirecting...';
+        
+        // Next action: redirect or grant access here
       } else {
-        formTitle.textContent = "Welcome to ISW";
-        formSubtitle.textContent = "Sign in to your account to continue";
-        submitBtn.textContent = "Sign In";
-        toggleText.textContent = "Don't have an account?";
-        toggleLink.textContent = "Sign Up";
-      }
-    });
-
-    // Form Submission Handling
-    document.getElementById('auth-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const identifier = document.getElementById('identifier').value;
-      const password = document.getElementById('password').value;
-
-      if (isSignUpMode) {
-        alert(`Creating account for: ${identifier}`);
-        // Firebase signup code will go here next!
-      } else {
-        alert(`Logging in as: ${identifier}`);
-        // Firebase login code will go here next!
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = 'Verification failed. Incorrect details provided.';
       }
     });
   </script>
