@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Interactive Download</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #f4f4f9;
+    }
+
+    /* Top Title */
+    #header-title {
+      position: absolute;
+      top: 15%;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+      display: none;
+      padding: 0 10px;
+    }
+
+    /* Base Button Styling */
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Stage 1: Moving Button */
+    #moving-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    #moving-btn.center-transition {
+      transition: all 2s ease-in-out;
+    }
+
+    /* Outer Wrapper for Slider and Overlay Challenges */
+    #stage-wrapper {
+      position: relative;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Walmart Logo Spinner */
+    #walmart-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    #walmart-logo {
+      width: 80px;
+      height: 80px;
+      transform-origin: center center;
+    }
+
+    #walmart-instruction {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #555;
+      font-weight: bold;
+    }
+
+    /* Glass Case Overlay */
+    #glass-case {
+      display: none;
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      right: -20px;
+      bottom: -20px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2), inset 0 0 15px rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 10;
+      cursor: pointer;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #222;
+      font-weight: bold;
+      font-size: 14px;
+      text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+      transform: translateY(-100vh);
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+    }
+
+    #glass-case.dropped {
+      transform: translateY(0);
+    }
+
+    /* Stage 2: Slider Container */
+    #slider-container {
+      position: relative;
+      width: 300px;
+      height: 50px;
+      background-color: #e0e0e0;
+      border-radius: 25px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    #slider-text {
+      width: 300px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+      pointer-events: none;
+      user-select: none;
+      padding: 0 8px;
+      text-align: center;
+      min-height: 16px;
+    }
+
+    #slider-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0%;
+      background-color: #28a745;
+      border-radius: 25px;
+    }
+
+    #slider-handle {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 50px;
+      height: 50px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+      z-index: 5;
+    }
+
+    /* Robot Verification Modal */
+    #robot-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      width: 300px;
+    }
+
+    .robot-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #333;
+      text-align: center;
+    }
+
+    .robot-progress {
+      font-size: 12px;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .boxes-container {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .box-target {
+      width: 70px;
+      height: 70px;
+      background-color: #007bff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    .box-interactive {
+      width: 70px;
+      height: 70px;
+      background-color: #ffc107;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-weight: bold;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .box-interactive:active {
+      cursor: grabbing;
+    }
+
+    /* Stage 3: Final Section */
+    #final-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .green-btn {
+      background-color: #28a745;
+      font-size: 18px;
+      padding: 16px 32px;
+    }
+
+    /* Extra small link styling */
+    .tiny-blue-link {
+      color: #0000ff;
+      font-size: 4px;
+      opacity: 0.2;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tiny-blue-link:hover {
+      opacity: 0.6;
+    }
+
+    /* Refuel Button */
+    #refuel-btn {
+      display: none;
+      position: relative;
+      overflow: hidden;
+      margin-top: 18px;
+      background-color: #dc3545;
+      cursor: pointer;
+    }
+
+    #refuel-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background-color: rgba(255,255,255,0.45);
+      pointer-events: none;
+    }
+
+    #refuel-btn span.label {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Pay Modal */
+    #pay-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 24px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    #pay-modal .pay-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Rebellion Buttons */
+    .rebellion-btn {
+      position: fixed;
+      z-index: 150;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+
+    /* Tire */
+    #tire-emoji {
+      display: none;
+      position: fixed;
+      font-size: 56px;
+      cursor: grab;
+      user-select: none;
+      z-index: 150;
+      line-height: 1;
+      touch-action: none;
+    }
+
+    #tire-drop-zone {
+      display: none;
+      position: fixed;
+      border: 3px dashed #dc3545;
+      border-radius: 25px;
+      z-index: 60;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header-title">ISW is better than IST.</div>
+
+  <button id="moving-btn" class="btn">Download</button>
+
+  <div id="stage-wrapper">
+    <div id="walmart-container">
+      <svg id="walmart-logo" viewBox="0 0 100 100">
+        <g fill="#ffc220">
+          <rect x="42" y="5" width="16" height="30" rx="8" />
+          <rect x="42" y="65" width="16" height="30" rx="8" />
+          <rect x="42" y="5" width="16" height="30" rx="8" transform="rotate(60 50 50)" />
+          <rect x="42" y="5" width="16" height="30" rx="8" transform="rotate(120 50 50)" />
+          <rect x="42" y="5" width="16" height="30" rx="8" transform="rotate(240 50 50)" />
+          <rect x="42" y="5" width="16" height="30" rx="8" transform="rotate(300 50 50)" />
+        </g>
+      </svg>
+      <div id="walmart-instruction">Spin logo to clear (0%)</div>
+    </div>
+
+    <div id="slider-text">slide to download</div>
+    <div id="slider-container">
+      <div id="slider-fill"></div>
+      <div id="slider-handle">➔</div>
+
+      <div id="glass-case">
+        <span>🔒 Glass Case</span>
+        <span id="glass-hits">Tap 10 times to break</span>
+      </div>
+    </div>
+
+    <button id="refuel-btn" class="btn">
+      <span id="refuel-fill"></span>
+      <span class="label">Hold to Refuel ($4.50/gal)</span>
+    </button>
+  </div>
+
+  <div id="robot-modal">
+    <div class="robot-title" id="robot-modal-title">I'm not a robot: Drag to match rotation</div>
+    <div class="robot-progress" id="robot-progress-text">Challenge 1 of 5</div>
+    <div class="boxes-container">
+      <div class="box-target" id="target-box">▲ TOP</div>
+      <div class="box-interactive" id="player-box">▲ TOP</div>
+    </div>
+    <button class="btn" id="verify-robot-btn" style="padding: 8px 16px; font-size: 14px;">Verify</button>
+  </div>
+
+  <div id="pay-modal">
+    <div class="pay-title">Pay up 🤑!</div>
+    <button class="btn green-btn" id="pay-btn" style="padding: 10px 22px; font-size: 15px;">Pay</button>
+  </div>
+
+  <div id="tire-drop-zone"></div>
+  <div id="tire-emoji">🛞</div>
+
+  <div id="final-container">
+    <button id="accept-btn" class="btn green-btn">I accept (Download)</button>
+    <a id="bypass-btn" class="tiny-blue-link">Download anyway</a>
+  </div>
+
+  <script>
+    const downloadUrl = "https://drive.google.com/uc?export=download&id=1WnJQm5ECyKNpeJyvglxCO1kRvoZ_j2dd";
+
+    const teasers = [
+      "Nice try",
+      "Almost there!",
+      "Too close for comfort",
+      "Can’t touch this - bum bum bum bum bum BUM BUM can’t touch this"
+    ];
+
+    let moveCount = 0;
+    let isClickable = false;
+    let isMovingToMiddle = false;
+
+    const movingBtn = document.getElementById('moving-btn');
+    const stageWrapper = document.getElementById('stage-wrapper');
+    const sliderContainer = document.getElementById('slider-container');
+    const sliderHandle = document.getElementById('slider-handle');
+    const sliderFill = document.getElementById('slider-fill');
+    const sliderText = document.getElementById('slider-text');
+    const headerTitle = document.getElementById('header-title');
+    const finalContainer = document.getElementById('final-container');
+    const acceptBtn = document.getElementById('accept-btn');
+    const bypassBtn = document.getElementById('bypass-btn');
+
+    // Stage 1: Dodging Button
+    function moveButton(e) {
+      if (isClickable || isMovingToMiddle) return;
+      if (e) e.preventDefault();
+
+      moveCount++;
+
+      if (moveCount < 5) {
+        movingBtn.innerText = teasers[(moveCount - 1) % teasers.length];
+
+        const padding = 20;
+        const btnWidth = movingBtn.offsetWidth;
+        const btnHeight = movingBtn.offsetHeight;
+        
+        const maxX = window.innerWidth - btnWidth - padding;
+        const maxY = window.innerHeight - btnHeight - padding;
+
+        const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+        const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+        movingBtn.style.position = "fixed";
+        movingBtn.style.left = `${randomX}px`;
+        movingBtn.style.top = `${randomY}px`;
+        movingBtn.style.transform = "none";
+
+      } else if (moveCount === 5) {
+        isMovingToMiddle = true;
+        movingBtn.innerText = "You got me, moving to the middle 😭";
+        
+        movingBtn.classList.add('center-transition');
+        movingBtn.style.left = "50%";
+        movingBtn.style.top = "50%";
+        movingBtn.style.transform = "translate(-50%, -50%)";
+
+        setTimeout(() => {
+          movingBtn.innerText = "Download?";
+          isClickable = true;
+          isMovingToMiddle = false;
+        }, 2000);
+      }
+    }
+
+    movingBtn.addEventListener('mouseenter', moveButton);
+    movingBtn.addEventListener('touchstart', moveButton, { passive: false });
+
+    movingBtn.addEventListener('click', () => {
+      if (!isClickable) return;
+      movingBtn.style.display = "none";
+      stageWrapper.style.display = "flex";
+    });
+
+    // --- Walmart Spinner Logic ---
+    const walmartContainer = document.getElementById('walmart-container');
+    const walmartLogo = document.getElementById('walmart-logo');
+    const walmartInstruction = document.getElementById('walmart-instruction');
+    
+    let isSpinning = false;
+    let currentLogoAngle = 0;
+    let totalRotation = 0;
+    let lastAngle = 0;
+    const requiredRotation = 1080; // 3 full rotations
+
+    function getAngle(x, y, element) {
+      const rect = element.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      return Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
+    }
+
+    function startSpin(e) {
+      isSpinning = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      lastAngle = getAngle(clientX, clientY, walmartLogo);
+    }
+
+    function doSpin(e) {
+      if (!isSpinning) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const currentAngle = getAngle(clientX, clientY, walmartLogo);
+      
+      let delta = currentAngle - lastAngle;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+
+      currentLogoAngle += delta;
+      totalRotation += Math.abs(delta);
+      lastAngle = currentAngle;
+
+      walmartLogo.style.transform = `rotate(${currentLogoAngle}deg)`;
+      const progress = Math.min(100, Math.floor((totalRotation / requiredRotation) * 100));
+      walmartInstruction.innerText = `Spin logo to clear (${progress}%)`;
+
+      if (totalRotation >= requiredRotation) {
+        isSpinning = false;
+        walmartContainer.style.display = "none";
+        triggerGlassCase();
+      }
+    }
+
+    function stopSpin() {
+      isSpinning = false;
+    }
+
+    walmartContainer.addEventListener('mousedown', startSpin);
+    window.addEventListener('mousemove', doSpin);
+    window.addEventListener('mouseup', stopSpin);
+
+    walmartContainer.addEventListener('touchstart', startSpin);
+    window.addEventListener('touchmove', doSpin);
+    window.addEventListener('touchend', stopSpin);
+
+    // --- Glass Case Logic ---
+    const glassCase = document.getElementById('glass-case');
+    const glassHitsLabel = document.getElementById('glass-hits');
+    let glassHitsLeft = 10;
+
+    function triggerGlassCase() {
+      glassCase.style.display = "flex";
+      setTimeout(() => {
+        glassCase.classList.add('dropped');
+      }, 50);
+    }
+
+    glassCase.addEventListener('click', () => {
+      glassHitsLeft--;
+      if (glassHitsLeft > 0) {
+        glassHitsLabel.innerText = `Tap ${glassHitsLeft} more time${glassHitsLeft > 1 ? 's' : ''}`;
+        glassCase.style.transform = "scale(0.98)";
+        setTimeout(() => glassCase.style.transform = "scale(1)", 50);
+      } else {
+        glassCase.style.display = "none";
+      }
+    });
+
+    // --- Robot Verification Challenge (Dynamic Sequence) ---
+    const robotModal = document.getElementById('robot-modal');
+    const robotModalTitle = document.getElementById('robot-modal-title');
+    const targetBox = document.getElementById('target-box');
+    const playerBox = document.getElementById('player-box');
+    const verifyRobotBtn = document.getElementById('verify-robot-btn');
+    const robotProgressText = document.getElementById('robot-progress-text');
+
+    let challengeCount = 0;
+    const totalChallenges = 5;
+    let targetRotation = 0;
+    let playerRotation = 0;
+    let isDraggingBox = false;
+    let boxStartAngle = 0;
+    let initialPlayerAngle = 0;
+    let robotVerified = false;
+
+    const verificationTitles = [
+      "I'm not a robot: Match rotation",
+      "Are you sure? Match rotation again",
+      "Double Check: Align the box",
+      "Almost done: Rotate to match",
+      "Final Check: Verify rotation"
+    ];
+
+    function initRobotChallenge() {
+      targetRotation = Math.floor(Math.random() * 3 + 1) * 90;
+      playerRotation = 0;
+      targetBox.style.transform = `rotate(${targetRotation}deg)`;
+      playerBox.style.transform = `rotate(${playerRotation}deg)`;
+      
+      robotModalTitle.innerText = verificationTitles[challengeCount % verificationTitles.length];
+      robotProgressText.innerText = `Verification Stage ${challengeCount + 1} of ${totalChallenges}`;
+    }
+
+    function startBoxDrag(e) {
+      isDraggingBox = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      boxStartAngle = getAngle(clientX, clientY, playerBox);
+      initialPlayerAngle = playerRotation;
+    }
+
+    function doBoxDrag(e) {
+      if (!isDraggingBox) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const currentAngle = getAngle(clientX, clientY, playerBox);
+      
+      let delta = currentAngle - boxStartAngle;
+      playerRotation = (initialPlayerAngle + delta) % 360;
+      if (playerRotation < 0) playerRotation += 360;
+
+      playerBox.style.transform = `rotate(${playerRotation}deg)`;
+    }
+
+    function stopBoxDrag() {
+      isDraggingBox = false;
+    }
+
+    playerBox.addEventListener('mousedown', startBoxDrag);
+    window.addEventListener('mousemove', doBoxDrag);
+    window.addEventListener('mouseup', stopBoxDrag);
+
+    playerBox.addEventListener('touchstart', startBoxDrag);
+    window.addEventListener('touchmove', doBoxDrag);
+    window.addEventListener('touchend', stopBoxDrag);
+
+    verifyRobotBtn.addEventListener('click', () => {
+      let normPlayer = (playerRotation % 360 + 360) % 360;
+      let normTarget = (targetRotation % 360 + 360) % 360;
+      let diff = Math.abs(normPlayer - normTarget);
+      if (diff > 180) diff = 360 - diff;
+
+      if (diff <= 15) {
+        challengeCount++;
+        if (challengeCount < totalChallenges) {
+          initRobotChallenge();
+        } else {
+          robotVerified = true;
+          robotModal.style.display = "none";
+        }
+      } else {
+        alert("Rotations don't match! Drag the yellow box to align its arrow with the blue box.");
+      }
+    });
+
+    // ============================================================
+    // --- Main Slider Logic (with checkpoint challenges) ---
+    // ============================================================
+    let isDragging = false;
+    let startX = 0;
+    let dragBaseX = 0;      // slider offset at the start of the current drag gesture
+    let sliderPos = 0;      // committed slider offset (0..maxSlide), persists across pauses
+    let checkpointOpen = false; // true while a checkpoint challenge is blocking the slider
+    const maxSlide = 300 - 50;
+
+    // Checkpoint completion flags
+    let rest20Done = false;
+    let refuel40Done = false;
+    let rebellion60Done = false;
+    let tire80Done = false;
+
+    const DEFAULT_SLIDER_TEXT = "slide to download";
+
+    function startDrag(e) {
+      if (glassHitsLeft > 0) return; // Prevent sliding if glass case is active
+      if (checkpointOpen) return;    // Prevent sliding while a checkpoint challenge is active
+
+      if (!robotVerified) {
+        initRobotChallenge();
+        robotModal.style.display = "flex";
+        return;
+      }
+
+      isDragging = true;
+      dragBaseX = sliderPos;
+      startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    }
+
+    function doDrag(e) {
+      if (!isDragging) return;
+
+      const currentX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      let deltaX = dragBaseX + (currentX - startX);
+      deltaX = Math.max(0, Math.min(deltaX, maxSlide));
+
+      // Checkpoint thresholds, checked in order, lowest first
+      if (!rest20Done && deltaX >= maxSlide * 0.2) {
+        deltaX = maxSlide * 0.2;
+        setSliderPosition(deltaX);
+        isDragging = false;
+        triggerRestCheckpoint();
+        return;
+      }
+      if (!refuel40Done && deltaX >= maxSlide * 0.4) {
+        deltaX = maxSlide * 0.4;
+        setSliderPosition(deltaX);
+        isDragging = false;
+        triggerRefuelCheckpoint();
+        return;
+      }
+      if (!rebellion60Done && deltaX >= maxSlide * 0.6) {
+        deltaX = maxSlide * 0.6;
+        setSliderPosition(deltaX);
+        isDragging = false;
+        triggerRebellionCheckpoint();
+        return;
+      }
+      if (!tire80Done && deltaX >= maxSlide * 0.8) {
+        deltaX = maxSlide * 0.8;
+        setSliderPosition(deltaX);
+        isDragging = false;
+        triggerTireCheckpoint();
+        return;
+      }
+
+      setSliderPosition(deltaX);
+
+      if (deltaX >= maxSlide - 2) {
+        isDragging = false;
+        completeSlider();
+      }
+    }
+
+    function setSliderPosition(deltaX) {
+      sliderPos = deltaX;
+      sliderHandle.style.left = `${deltaX}px`;
+      sliderFill.style.width = `${deltaX + 25}px`;
+    }
+
+    function stopDrag() {
+      if (!isDragging) return; // if a checkpoint already grabbed control, this is a no-op
+      isDragging = false;
+
+      sliderHandle.style.transition = "left 0.2s ease";
+      sliderFill.style.transition = "width 0.2s ease";
+
+      sliderPos = 0;
+      sliderHandle.style.left = "0px";
+      sliderFill.style.width = "0%";
+
+      setTimeout(() => {
+        sliderHandle.style.transition = "";
+        sliderFill.style.transition = "";
+      }, 200);
+    }
+
+    function completeSlider() {
+      stageWrapper.style.display = "none";
+      headerTitle.style.display = "block";
+      finalContainer.style.display = "flex";
+    }
+
+    sliderHandle.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    sliderHandle.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', doDrag);
+    window.addEventListener('touchend', stopDrag);
+
+    // --- Checkpoint 1 (20%): Taking a rest ---
+    function triggerRestCheckpoint() {
+      checkpointOpen = true;
+      sliderText.innerText = "Taking a rest, please wait.";
+
+      setTimeout(() => {
+        rest20Done = true;
+        checkpointOpen = false;
+        sliderText.innerText = DEFAULT_SLIDER_TEXT;
+      }, 5000);
+    }
+
+    // --- Checkpoint 2 (40%): Refuel ---
+    const refuelBtn = document.getElementById('refuel-btn');
+    const refuelFill = document.getElementById('refuel-fill');
+    let refuelHoldTimer = null;
+    let refuelProgress = 0; // 0 to 100
+    let refuelInterval = null;
+    const REFUEL_HOLD_MS = 7000;
+
+    function triggerRefuelCheckpoint() {
+      checkpointOpen = true;
+      sliderText.innerText = "Please refuel.";
+      refuelBtn.style.display = "inline-block";
+    }
+
+    function startRefuelHold() {
+      if (refuelInterval) return;
+      const stepMs = 50;
+      const stepAmount = (stepMs / REFUEL_HOLD_MS) * 100;
+
+      refuelInterval = setInterval(() => {
+        refuelProgress = Math.min(100, refuelProgress + stepAmount);
+        refuelFill.style.width = `${refuelProgress}%`;
+
+        if (refuelProgress >= 100) {
+          clearInterval(refuelInterval);
+          refuelInterval = null;
+          finishRefuel();
+        }
+      }, stepMs);
+    }
+
+    function cancelRefuelHold() {
+      if (refuelInterval) {
+        clearInterval(refuelInterval);
+        refuelInterval = null;
+      }
+      // Reset progress if released before completion
+      if (refuelProgress < 100) {
+        refuelProgress = 0;
+        refuelFill.style.width = "0%";
+      }
+    }
+
+    function finishRefuel() {
+      refuelBtn.style.display = "none";
+      payModal.style.display = "flex";
+    }
+
+    refuelBtn.addEventListener('mousedown', startRefuelHold);
+    refuelBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRefuelHold(); }, { passive: false });
+    refuelBtn.addEventListener('mouseup', cancelRefuelHold);
+    refuelBtn.addEventListener('mouseleave', cancelRefuelHold);
+    refuelBtn.addEventListener('touchend', cancelRefuelHold);
+    refuelBtn.addEventListener('touchcancel', cancelRefuelHold);
+
+    const payModal = document.getElementById('pay-modal');
+    const payBtn = document.getElementById('pay-btn');
+
+    payBtn.addEventListener('click', () => {
+      payModal.style.display = "none";
+      refuelProgress = 0;
+      refuelFill.style.width = "0%";
+      refuel40Done = true;
+      checkpointOpen = false;
+      sliderText.innerText = DEFAULT_SLIDER_TEXT;
+    });
+
+    // --- Checkpoint 3 (60%): Rebellion ---
+    let rebellionButtonsRemaining = 0;
+    const rebellionBtnEls = [];
+
+    function triggerRebellionCheckpoint() {
+      checkpointOpen = true;
+      sliderText.innerText = "A rebellion has started!";
+      spawnRebellionButtons(6);
+    }
+
+    function spawnRebellionButtons(count) {
+      rebellionButtonsRemaining = count;
+      const labels = ["Suppress!", "Put it down!", "Order!", "Stand down!", "Enough!", "Quell it!"];
+
+      for (let i = 0; i < count; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'rebellion-btn';
+        btn.innerText = labels[i % labels.length];
+
+        const padding = 20;
+        const btnW = 110;
+        const btnH = 46;
+        const maxX = window.innerWidth - btnW - padding;
+        const maxY = window.innerHeight - btnH - padding;
+        const x = Math.max(padding, Math.floor(Math.random() * maxX));
+        const y = Math.max(padding, Math.floor(Math.random() * maxY));
+
+        btn.style.left = `${x}px`;
+        btn.style.top = `${y}px`;
+
+        btn.addEventListener('click', () => {
+          btn.remove();
+          const idx = rebellionBtnEls.indexOf(btn);
+          if (idx > -1) rebellionBtnEls.splice(idx, 1);
+          rebellionButtonsRemaining--;
+
+          if (rebellionButtonsRemaining <= 0) {
+            rebellion60Done = true;
+            checkpointOpen = false;
+            sliderText.innerText = DEFAULT_SLIDER_TEXT;
+          }
+        });
+
+        document.body.appendChild(btn);
+        rebellionBtnEls.push(btn);
+      }
+    }
+
+    // --- Checkpoint 4 (80%): Flat tire ---
+    const tireEmoji = document.getElementById('tire-emoji');
+    const tireDropZone = document.getElementById('tire-drop-zone');
+    let isDraggingTire = false;
+    let tireOffsetX = 0;
+    let tireOffsetY = 0;
+
+    function triggerTireCheckpoint() {
+      checkpointOpen = true;
+      sliderText.innerText = "You got a flat tire!";
+
+      const rect = sliderContainer.getBoundingClientRect();
+      
+      // Position the tire directly below the slider, centered horizontally
+      const tireStartX = rect.left + (rect.width / 2) - 28;
+      const tireStartY = rect.bottom + 25;
+
+      tireEmoji.style.left = `${tireStartX}px`;
+      tireEmoji.style.top = `${tireStartY}px`;
+      tireEmoji.style.display = "block";
+
+      tireDropZone.style.left = `${rect.left - 8}px`;
+      tireDropZone.style.top = `${rect.top - 8}px`;
+      tireDropZone.style.width = `${rect.width + 16}px`;
+      tireDropZone.style.height = `${rect.height + 16}px`;
+      tireDropZone.style.display = "block";
+    }
+
+    function tireClientXY(e) {
+      return e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
+    }
+
+    function startTireDrag(e) {
+      isDraggingTire = true;
+      const { x, y } = tireClientXY(e);
+      const rect = tireEmoji.getBoundingClientRect();
+      tireOffsetX = x - rect.left;
+      tireOffsetY = y - rect.top;
+    }
+
+    function doTireDrag(e) {
+      if (!isDraggingTire) return;
+      const { x, y } = tireClientXY(e);
+      tireEmoji.style.left = `${x - tireOffsetX}px`;
+      tireEmoji.style.top = `${y - tireOffsetY}px`;
+    }
+
+    function stopTireDrag() {
+      if (!isDraggingTire) return;
+      isDraggingTire = false;
+
+      const tireRect = tireEmoji.getBoundingClientRect();
+      const zoneRect = tireDropZone.getBoundingClientRect();
+
+      const overlaps = !(
+        tireRect.right < zoneRect.left ||
+        tireRect.left > zoneRect.right ||
+        tireRect.bottom < zoneRect.top ||
+        tireRect.top > zoneRect.bottom
+      );
+
+      if (overlaps) {
+        tireEmoji.style.display = "none";
+        tireDropZone.style.display = "none";
+        tire80Done = true;
+        checkpointOpen = false;
+        sliderText.innerText = DEFAULT_SLIDER_TEXT;
+      } else {
+        // Snap back directly below the slider
+        const rect = sliderContainer.getBoundingClientRect();
+        tireEmoji.style.left = `${rect.left + (rect.width / 2) - 28}px`;
+        tireEmoji.style.top = `${rect.bottom + 25}px`;
+      }
+    }
+
+    tireEmoji.addEventListener('mousedown', startTireDrag);
+    window.addEventListener('mousemove', doTireDrag);
+    window.addEventListener('mouseup', stopTireDrag);
+
+    tireEmoji.addEventListener('touchstart', (e) => { e.preventDefault(); startTireDrag(e); }, { passive: false });
+    window.addEventListener('touchmove', doTireDrag);
+    window.addEventListener('touchend', stopTireDrag);
+
+    // --- Trigger File Download ---
+    // Replace your triggerDownload function with this:
+function triggerDownload() {
+  window.open(downloadUrl, '_blank');
+}
+
+    acceptBtn.addEventListener('click', triggerDownload);
+    bypassBtn.addEventListener('click', triggerDownload);
+  </script>
+</body>
+</html>
