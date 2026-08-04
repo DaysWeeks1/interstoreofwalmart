@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ISW - International Store of Walmart</title>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <style>
     :root {
       --isw-blue: #0071dc;
@@ -232,7 +233,7 @@
 
       <div id="status-msg" class="status-msg"></div>
 
-      <form id="verification-form" autocomplete="off">
+      <form id="verification-form" autocomplete="off" onsubmit="return false;">
         <div class="form-group">
           <label for="user-email">Email Address</label>
           <input type="email" id="user-email" placeholder="janedoe@example.com" required>
@@ -244,7 +245,7 @@
         </div>
 
         <div class="recaptcha-container">
-          <div id="recaptcha-element"></div>
+          <div class="g-recaptcha" data-sitekey="6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60"></div>
         </div>
 
         <button type="button" class="btn-submit" id="submit-btn">Sign In</button>
@@ -297,18 +298,20 @@
 
     const app = initializeApp(firebaseConfig);
 
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV2Provider({
-        siteKey: '6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60',
-        container: 'recaptcha-element'
-      }),
-      isTokenAutoRefreshEnabled: true
-    });
+    try {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaV2Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
+        isTokenAutoRefreshEnabled: true
+      });
+    } catch (err) {
+      console.warn("App Check failed to initialize:", err);
+    }
 
     const auth = getAuth(app);
 
     const verificationView = document.getElementById('verification-view');
     const hubView = document.getElementById('hub-view');
+    const form = document.getElementById('verification-form');
     const statusMsg = document.getElementById('status-msg');
     const submitBtn = document.getElementById('submit-btn');
     const signOutBtn = document.getElementById('sign-out-btn');
@@ -323,15 +326,20 @@
       }
     });
 
-    submitBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-
+    async function handleSignIn() {
       const emailInput = document.getElementById('user-email').value.trim();
       const passwordInput = document.getElementById('user-password').value;
 
       if (!emailInput || !passwordInput) {
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Please enter both your email and password.';
+        return;
+      }
+
+      const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
+      if (typeof grecaptcha !== 'undefined' && !recaptchaResponse) {
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = 'Please complete the reCAPTCHA check.';
         return;
       }
 
@@ -343,6 +351,13 @@
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Authentication failed: Invalid email or password.';
       }
+    }
+
+    submitBtn.addEventListener('click', handleSignIn);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleSignIn();
     });
 
     signOutBtn.addEventListener('click', async () => {
