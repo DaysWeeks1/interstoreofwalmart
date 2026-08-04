@@ -534,22 +534,30 @@
   }
 
   /* Event Listeners */
-  document.querySelectorAll('.hub-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const stateKey = card.getAttribute('data-tile') || card.textContent.trim();
+document.querySelectorAll('.hub-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const tileAttr = card.getAttribute('data-tile');
+    const textContent = card.textContent.trim().toLowerCase();
 
-      // Intercept direct external link tiles
-      if (stateKey === 'food') {
-        openFirestoreLink('orderFood');
-      } else if (stateKey === 'card') {
-        openFirestoreLink('getCard');
-      } else if (stateKey === 'media') {
-        openFirestoreLink('iswMedia');
-      } else {
-        pushNavState(stateKey);
-      }
-    });
+    
+    if (tileAttr === 'food' || textContent.includes('food')) {
+      openFirestoreLink('orderFood');
+    
+    
+    } else if (tileAttr === 'card' || textContent.includes('card')) {
+      openFirestoreLink('getCard');
+    
+    
+    } else if (tileAttr === 'media' || textContent.includes('media')) {
+      openFirestoreLink('iswMedia');
+    
+    
+    } else {
+      const stateKey = tileAttr || card.textContent.trim();
+      pushNavState(stateKey);
+    }
   });
+});
 
   navBackBtn.addEventListener('click', () => {
     if (navIndex > 0) {
