@@ -247,7 +247,7 @@
           <div id="recaptcha-element"></div>
         </div>
 
-        <button type="submit" class="btn-submit" id="submit-btn">Sign In</button>
+        <button type="button" class="btn-submit" id="submit-btn">Sign In</button>
       </form>
     </div>
   </div>
@@ -309,8 +309,8 @@
 
     const verificationView = document.getElementById('verification-view');
     const hubView = document.getElementById('hub-view');
-    const form = document.getElementById('verification-form');
     const statusMsg = document.getElementById('status-msg');
+    const submitBtn = document.getElementById('submit-btn');
     const signOutBtn = document.getElementById('sign-out-btn');
 
     onAuthStateChanged(auth, (user) => {
@@ -323,11 +323,17 @@
       }
     });
 
-    form.addEventListener('submit', async (e) => {
+    submitBtn.addEventListener('click', async (e) => {
       e.preventDefault();
 
       const emailInput = document.getElementById('user-email').value.trim();
       const passwordInput = document.getElementById('user-password').value;
+
+      if (!emailInput || !passwordInput) {
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = 'Please enter both your email and password.';
+        return;
+      }
 
       try {
         await signInWithEmailAndPassword(auth, emailInput, passwordInput);
