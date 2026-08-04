@@ -60,10 +60,17 @@
       display: none;
     }
 
-    /* Standalone Audio Button Container on Sign-In Page */
+    /* Standalone Audio Bar (Top Left on Sign-In Page) */
     #standalone-audio-container {
       left: 1.25rem;
       display: flex;
+      gap: 0.3rem;
+    }
+
+    #audio-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
 
     .univ-nav-btn {
@@ -390,16 +397,23 @@
 
   <!-- Standalone Audio Bar (Left Top - Signed Out / Login Page) -->
   <div id="standalone-audio-container" class="glass-bar">
-    <!-- Play/Pause Button Placeholder (Gets moved via JS dynamically) -->
+    <!-- Audio controls group gets inserted here dynamically -->
   </div>
 
-  <!-- Shared Audio Button Template -->
-  <button class="univ-nav-btn" id="audio-toggle-btn" title="Pause Audio">
-    <!-- Pause Icon -->
-    <svg id="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-    <!-- Play Icon -->
-    <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-  </button>
+  <!-- Audio Controls Group (Shared Template) -->
+  <div id="audio-controls-group">
+    <button class="univ-nav-btn" id="audio-toggle-btn" title="Pause Audio">
+      <!-- Pause Icon -->
+      <svg id="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+      <!-- Play Icon -->
+      <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+    </button>
+
+    <!-- Skip Track Button -->
+    <button class="univ-nav-btn" id="audio-skip-btn" title="Skip to Next Track">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 21 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+    </button>
+  </div>
 
   <!-- Settings Toggle Button (Right Top) -->
   <div id="settings-nav-btn-container" class="glass-bar">
@@ -545,7 +559,9 @@
 
   let currentAudioIndex = 0;
   const audioPlayer = document.getElementById('bg-audio-player');
+  const audioControlsGroup = document.getElementById('audio-controls-group');
   const audioToggleBtn = document.getElementById('audio-toggle-btn');
+  const audioSkipBtn = document.getElementById('audio-skip-btn');
   const iconPlay = document.getElementById('icon-play');
   const iconPause = document.getElementById('icon-pause');
   const standaloneAudioContainer = document.getElementById('standalone-audio-container');
@@ -572,11 +588,14 @@
     });
   }
 
-  // Loop through tracks in playlist
-  audioPlayer.addEventListener('ended', () => {
+  // Skip to next track in playlist
+  function skipToNextTrack() {
     currentAudioIndex = (currentAudioIndex + 1) % audioPlaylist.length;
     playTrack(currentAudioIndex);
-  });
+  }
+
+  // Loop through tracks in playlist automatically
+  audioPlayer.addEventListener('ended', skipToNextTrack);
 
   // Toggle Audio Play/Pause
   audioToggleBtn.addEventListener('click', () => {
@@ -593,10 +612,15 @@
     }
   });
 
+  // Skip Track Listener
+  audioSkipBtn.addEventListener('click', () => {
+    triggerBounce(audioSkipBtn);
+    skipToNextTrack();
+  });
+
   // Auto-start playback on initial page load
   window.addEventListener('DOMContentLoaded', () => {
-    // Put audio button in standalone container initially for Sign-In page
-    standaloneAudioContainer.appendChild(audioToggleBtn);
+    standaloneAudioContainer.appendChild(audioControlsGroup);
     playTrack(currentAudioIndex);
   });
 
@@ -610,7 +634,6 @@
   };
   window.addEventListener('click', handleFirstInteraction);
   window.addEventListener('keydown', handleFirstInteraction);
-
 
   const verificationView = document.getElementById('verification-view');
   const hubView = document.getElementById('hub-view');
@@ -866,9 +889,9 @@
     if (user) {
       verificationView.style.display = 'none';
 
-      // Show signed-in nav bar & Move audio button inside Universal Nav
+      // Show signed-in nav bar & Move audio controls inside Universal Nav
       univNav.style.display = 'flex';
-      univNav.appendChild(audioToggleBtn);
+      univNav.appendChild(audioControlsGroup);
       standaloneAudioContainer.style.display = 'none';
 
       settingsNavBtnContainer.style.display = 'flex';
@@ -879,9 +902,9 @@
       settingsView.style.display = 'none';
       tileContentView.style.display = 'none';
 
-      // Hide signed-in nav bar & Move audio button to standalone top-left container
+      // Hide signed-in nav bar & Move audio controls to standalone top-left container
       univNav.style.display = 'none';
-      standaloneAudioContainer.appendChild(audioToggleBtn);
+      standaloneAudioContainer.appendChild(audioControlsGroup);
       standaloneAudioContainer.style.display = 'flex';
 
       settingsNavBtnContainer.style.display = 'none';
