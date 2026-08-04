@@ -284,8 +284,8 @@
     <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
   </div>
 
-  <script>
-    // Nice try
+<script>
+   
     const SECURE_KEYS = {
       name: "c29waGlhIGlzYWFr",
       email: "c29waGlhLmlzYWFrQGljbG91ZC5jb20=",
@@ -297,7 +297,10 @@
     const form = document.getElementById('verification-form');
     const statusMsg = document.getElementById('status-msg');
     const signOutBtn = document.getElementById('sign-out-btn');
-    if (localStorage.getItem('isw_verified') === 'true') {
+
+    signOutBtn.textContent = "Ask for identity verification on next launch";
+
+    if (sessionStorage.getItem('isw_verified_session') === 'true') {
       showHubPage();
     }
 
@@ -319,8 +322,7 @@
         statusMsg.className = 'status-msg success';
         statusMsg.textContent = 'Identity Verified Successfully!';
 
-        
-        localStorage.setItem('isw_verified', 'true');
+        sessionStorage.setItem('isw_verified_session', 'true');
 
         setTimeout(() => {
           showHubPage();
@@ -335,9 +337,9 @@
       verificationView.style.display = 'none';
       hubView.style.display = 'flex';
     }
-    
+
     signOutBtn.addEventListener('click', () => {
-      localStorage.removeItem('isw_verified');
+      sessionStorage.removeItem('isw_verified_session');
       location.reload();
     });
   </script>
