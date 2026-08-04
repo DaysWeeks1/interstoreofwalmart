@@ -91,6 +91,12 @@
       box-shadow: 0 0 0 3px rgba(0, 113, 220, 0.15);
     }
 
+    .recaptcha-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.1rem;
+    }
+
     .status-msg {
       margin-bottom: 1rem;
       padding: 0.75rem;
@@ -229,12 +235,16 @@
       <form id="verification-form" autocomplete="off">
         <div class="form-group">
           <label for="user-email">Email Address</label>
-          <input type="email" id="user-email" placeholder="e.g. jane.doe@example.com" required>
+          <input type="email" id="user-email" placeholder="e.g. sophia.isaak@icloud.com" required>
         </div>
 
         <div class="form-group">
           <label for="user-password">Password</label>
           <input type="password" id="user-password" placeholder="Enter password" required>
+        </div>
+
+        <div class="recaptcha-container">
+          <div id="recaptcha-container"></div>
         </div>
 
         <button type="submit" class="btn-submit" id="submit-btn">Sign In</button>
@@ -271,6 +281,10 @@
       onAuthStateChanged, 
       signOut 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      initializeAppCheck, 
+      ReCaptchaV2Provider 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyC6bF5NMdFtqYeVvAHKHIrNm38dNEClEwA",
@@ -282,6 +296,12 @@
     };
 
     const app = initializeApp(firebaseConfig);
+
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV2Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
+      isTokenAutoRefreshEnabled: true
+    });
+
     const auth = getAuth(app);
 
     const verificationView = document.getElementById('verification-view');
