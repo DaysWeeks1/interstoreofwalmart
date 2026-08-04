@@ -218,12 +218,12 @@
     </div>
   </main>
 
-  <script>
+<script>
     // Nice try
-    const SECURE_HASHES = {
-      name: "e5cd3e198b17b6290eef530b12bc8ca9",
-      email: "b33671fb2461be0d5885f81254bf52ef",
-      ceo: "b1d4023dddf3f24bf74dddc2a11b6238"
+    const SECURE_KEYS = {
+      name: "c29waGlhIGlzYWFr",
+      email: "c29waGlhLmlzYWFrQGljbG91ZC5jb20=",
+      ceo: "ZGF2aWQgZ2ltcGVsZXZpY2g="
     };
 
     const form = document.getElementById('verification-form');
@@ -232,25 +232,24 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
+      // Clean input (lowercase and remove extra whitespace)
       const nameInput = document.getElementById('user-name').value.toLowerCase().trim();
       const emailInput = document.getElementById('user-email').value.toLowerCase().trim();
       const ceoInput = document.getElementById('ceo-name').value.toLowerCase().trim();
 
-      // Hash the inputs using the MD5 library
-      const inputNameHash = md5(nameInput);
-      const inputEmailHash = md5(emailInput);
-      const inputCeoHash = md5(ceoInput);
+      // Encode inputs to something using something()
+      const encodedName = btoa(nameInput);
+      const encodedEmail = btoa(emailInput);
+      const encodedCeo = btoa(ceoInput);
 
-      // Verify each field against the secure hashes
-      const isNameValid = inputNameHash === SECURE_HASHES.name;
-      const isEmailValid = inputEmailHash === SECURE_HASHES.email;
-      const isCeoValid = inputCeoHash === SECURE_HASHES.ceo;
+      // Verify each field
+      const isNameValid = encodedName === SECURE_KEYS.name;
+      const isEmailValid = encodedEmail === SECURE_KEYS.email;
+      const isCeoValid = encodedCeo === SECURE_KEYS.ceo;
 
       if (isNameValid && isEmailValid && isCeoValid) {
         statusMsg.className = 'status-msg success';
-        statusMsg.textContent = 'Identity Verified Successfully! Redirecting...';
-        
-        // Next action: redirect or grant access here
+        statusMsg.textContent = 'Identity Verified Successfully! Access Granted.';
       } else {
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Verification failed. Incorrect details provided.';
