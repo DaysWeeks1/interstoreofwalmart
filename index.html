@@ -73,7 +73,6 @@
       cursor: not-allowed;
     }
 
-    /* Bounce animation class */
     .bounce {
       animation: bounceAnim 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -265,7 +264,7 @@
       justify-content: center;
       min-height: 80vh;
       padding: 6rem 1.5rem 2rem 1.5rem;
-      text-align: center;
+      width: 100%;
     }
 
     #tile-content-view h2 {
@@ -274,10 +273,21 @@
       margin-bottom: 1rem;
     }
 
-    #tile-content-view p {
-      font-size: 1.1rem;
-      color: #444;
-      max-width: 600px;
+    #tile-body {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Embedded Sub-App View */
+    #embed-frame {
+      width: 100%;
+      height: 80vh;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      background: #fff;
     }
 
     @media (max-width: 600px) {
@@ -294,10 +304,10 @@
     <button class="univ-nav-btn" id="nav-logout-btn" title="Log Out">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
     </button>
-    <button class="univ-nav-btn" id="nav-back-btn" title="Back to Home" style="display: none;">
+    <button class="univ-nav-btn" id="nav-back-btn" title="Back" style="display: none;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <button class="univ-nav-btn" id="nav-forward-btn" title="Forward to Tile" style="display: none;">
+    <button class="univ-nav-btn" id="nav-forward-btn" title="Forward" style="display: none;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
   </div>
@@ -337,22 +347,22 @@
     <a href="#" class="terms-link">Terms and Conditions</a>
 
     <div class="grid-container">
-      <button class="hub-card">Newsletter Experiences & Feedback</button>
-      <button class="hub-card">Unsubscribe from the Newsletter</button>
-      <button class="hub-card">Order Food</button>
-      <button class="hub-card">ISW Card</button>
-      <button class="hub-card">Legal Action</button>
-      <button class="hub-card">Legacy Home Page</button>
-      <button class="hub-card">ISW Media</button>
-      <button class="hub-card">ISW Assistant</button>
-      <button class="hub-card">Funny Flyer</button>
-      <button class="hub-card">ISW Productions</button>
+      <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
+      <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
+      <button class="hub-card" data-tile="food">Order Food</button>
+      <button class="hub-card" data-tile="card">ISW Card</button>
+      <button class="hub-card" data-tile="legal">Legal Action</button>
+      <button class="hub-card" data-tile="legacy">Legacy Home Page</button>
+      <button class="hub-card" data-tile="media">ISW Media</button>
+      <button class="hub-card" data-tile="assistant">ISW Assistant</button>
+      <button class="hub-card" data-tile="flyer">Funny Flyer</button>
+      <button class="hub-card" data-tile="productions">ISW Productions</button>
     </div>
   </div>
 
   <div id="tile-content-view">
     <h2 id="tile-title">Tile Content</h2>
-    <p id="tile-description">Welcome to this section of the ISW Hub.</p>
+    <div id="tile-body"></div>
   </div>
 
   <script type="module">
@@ -389,7 +399,6 @@
     }
 
     const auth = getAuth(app);
-
     let recaptchaWidgetId = null;
 
     window.addEventListener('load', () => {
@@ -406,6 +415,8 @@
     const verificationView = document.getElementById('verification-view');
     const hubView = document.getElementById('hub-view');
     const tileContentView = document.getElementById('tile-content-view');
+    const tileTitle = document.getElementById('tile-title');
+    const tileBody = document.getElementById('tile-body');
     const form = document.getElementById('verification-form');
     const statusMsg = document.getElementById('status-msg');
     const submitBtn = document.getElementById('submit-btn');
@@ -415,7 +426,9 @@
     const navBackBtn = document.getElementById('nav-back-btn');
     const navForwardBtn = document.getElementById('nav-forward-btn');
 
-    let lastVisitedTile = null;
+    /* Navigation History State Machine */
+    let navStack = ['home'];
+    let navIndex = 0;
 
     function triggerNavBounce() {
       univNav.classList.remove('bounce');
@@ -423,14 +436,25 @@
       univNav.classList.add('bounce');
     }
 
-    function showHomeScreen() {
-      hubView.style.display = 'flex';
-      tileContentView.style.display = 'none';
+    function renderState(state) {
+      if (state === 'home') {
+        hubView.style.display = 'flex';
+        tileContentView.style.display = 'none';
 
-      navLogoutBtn.style.display = 'flex';
-      navBackBtn.style.display = 'none';
+        navLogoutBtn.style.display = 'flex';
+        navBackBtn.style.display = 'none';
+      } else {
+        hubView.style.display = 'none';
+        tileContentView.style.display = 'flex';
 
-      if (lastVisitedTile) {
+        navLogoutBtn.style.display = 'none';
+        navBackBtn.style.display = 'flex';
+
+        renderTileView(state);
+      }
+
+      // Show forward button if there are forward states in history
+      if (navIndex < navStack.length - 1) {
         navForwardBtn.style.display = 'flex';
       } else {
         navForwardBtn.style.display = 'none';
@@ -439,35 +463,59 @@
       triggerNavBounce();
     }
 
-    function showTileScreen(tileTitle) {
-      lastVisitedTile = tileTitle;
-
-      document.getElementById('tile-title').textContent = tileTitle;
-      document.getElementById('tile-description').textContent = `You are viewing the details for ${tileTitle}.`;
-
-      hubView.style.display = 'none';
-      tileContentView.style.display = 'flex';
-
-      navLogoutBtn.style.display = 'none';
-      navBackBtn.style.display = 'flex';
-      navForwardBtn.style.display = 'none';
-
-      triggerNavBounce();
+    function pushNavState(state) {
+      // Truncate forward history if pushing from middle of stack
+      navStack = navStack.slice(0, navIndex + 1);
+      navStack.push(state);
+      navIndex++;
+      renderState(state);
     }
 
+    function renderTileView(state) {
+      if (state === 'newsletter') {
+        tileTitle.textContent = "Newsletter Experiences & Feedback";
+        tileBody.innerHTML = `
+          <div class="grid-container" style="max-width: 600px;">
+            <button class="hub-card" id="btn-feedback">Feedback</button>
+            <button class="hub-card" id="btn-interactive-download">7/21/26</button>
+          </div>
+        `;
+
+        document.getElementById('btn-feedback').addEventListener('click', () => {
+          window.location.href = "feedbackLink";
+        });
+
+        document.getElementById('btn-interactive-download').addEventListener('click', () => {
+          pushNavState('interactive-download');
+        });
+      } else if (state === 'interactive-download') {
+        tileTitle.textContent = "Interactive Download";
+        tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
+      } else {
+        tileTitle.textContent = state;
+        tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
+      }
+    }
+
+    /* Event Listeners */
     document.querySelectorAll('.hub-card').forEach(card => {
       card.addEventListener('click', () => {
-        showTileScreen(card.textContent.trim());
+        const stateKey = card.getAttribute('data-tile') || card.textContent.trim();
+        pushNavState(stateKey);
       });
     });
 
     navBackBtn.addEventListener('click', () => {
-      showHomeScreen();
+      if (navIndex > 0) {
+        navIndex--;
+        renderState(navStack[navIndex]);
+      }
     });
 
     navForwardBtn.addEventListener('click', () => {
-      if (lastVisitedTile) {
-        showTileScreen(lastVisitedTile);
+      if (navIndex < navStack.length - 1) {
+        navIndex++;
+        renderState(navStack[navIndex]);
       }
     });
 
@@ -480,7 +528,7 @@
       if (user) {
         verificationView.style.display = 'none';
         univNav.style.display = 'flex';
-        showHomeScreen();
+        renderState('home');
       } else {
         verificationView.style.display = 'flex';
         hubView.style.display = 'none';
@@ -524,7 +572,6 @@
     }
 
     submitBtn.addEventListener('click', handleSignIn);
-
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       handleSignIn();
