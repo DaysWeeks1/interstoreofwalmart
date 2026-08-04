@@ -22,7 +22,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Set body background to Yellow */
     body {
       background-color: var(--isw-yellow-bg);
       color: #333;
@@ -31,9 +30,7 @@
       min-height: 100vh;
     }
 
-    /* -------------------
-       VERIFICATION VIEW 
-    -------------------- */
+    /* Verification Screen */
     #verification-view {
       display: flex;
       justify-content: center;
@@ -137,11 +134,9 @@
       background-color: var(--isw-yellow-hover);
     }
 
-    /* -------------------
-       HUB DASHBOARD VIEW 
-    -------------------- */
+    /* Hub Screen */
     #hub-view {
-      display: none; /* Hidden by default until verified */
+      display: none;
       flex-direction: column;
       align-items: center;
       padding: 3rem 1.5rem;
@@ -173,7 +168,6 @@
       cursor: pointer;
     }
 
-    /* Grid layout matching screenshot */
     .grid-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -205,29 +199,21 @@
       transform: translateY(-3px);
     }
 
-    /* Sign out option */
     .sign-out-btn {
       margin-top: 3rem;
       background: transparent;
       border: 2px solid var(--isw-blue);
       color: var(--isw-blue);
-      padding: 0.5rem 1.2rem;
+      padding: 0.6rem 1.4rem;
       border-radius: 20px;
       font-weight: bold;
       cursor: pointer;
     }
 
     @media (max-width: 600px) {
-      .main-heading {
-        font-size: 2.2rem;
-      }
-      .grid-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-      }
-      .hub-card {
-        font-size: 0.85rem;
-      }
+      .main-heading { font-size: 2.2rem; }
+      .grid-container { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+      .hub-card { font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -237,7 +223,7 @@
     <div class="verification-card">
       <div class="card-header">
         <h2>Identity Verification</h2>
-        <p>Please enter your credentials to verify your access to the ISW Hub.</p>
+        <p>Please verify it's you to continue.</p>
       </div>
 
       <div id="status-msg" class="status-msg"></div>
@@ -245,12 +231,17 @@
       <form id="verification-form" autocomplete="off">
         <div class="form-group">
           <label for="user-name">Full Name</label>
-          <input type="text" id="user-name" placeholder="e.g. Jane Doe" required>
+          <input type="text" id="user-name" placeholder="e.g. Sophia Isaak" required>
         </div>
 
         <div class="form-group">
           <label for="user-email">Email Address</label>
-          <input type="email" id="user-email" placeholder="e.g. name@example.com" required>
+          <input type="email" id="user-email" placeholder="e.g. sophia.isaak@icloud.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="user-password">Password</label>
+          <input type="password" id="user-password" placeholder="Enter password" required>
         </div>
 
         <div class="form-group">
@@ -258,7 +249,7 @@
           <input type="text" id="ceo-name" placeholder="Enter CEO's full name" required>
         </div>
 
-        <button type="submit" class="btn-submit">Verify & Continue</button>
+        <button type="submit" class="btn-submit" id="submit-btn">Verify & Continue</button>
       </form>
     </div>
   </div>
@@ -281,16 +272,30 @@
       <button class="hub-card">ISW Productions</button>
     </div>
 
-    <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
+    <button class="sign-out-btn" id="sign-out-btn">Ask for identity verification on next launch</button>
   </div>
 
-<script>
-   
-    const SECURE_KEYS = {
-      name: "c29waGlhIGlzYWFr",
-      email: "c29waGlhLmlzYWFrQGljbG91ZC5jb20=",
-      ceo: "ZGF2aWQgZ2ltcGVsZXZpY2g="
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      onAuthStateChanged, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    // Insert your Firebase project keys here
+    const firebaseConfig = {
+      apiKey: "AIzaSyC6bF5NMdFtqYeVvAHKHIrNm38dNEClEwA",
+      authDomain: "isw-pwa.firebaseapp.com",
+      projectId: "isw-pwa",
+      storageBucket: "isw-pwa.appspot.com",
+      messagingSenderId: "108445271932",
+      appId: "1:108445271932:web:922266a82378a539d086f9"
     };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
     const verificationView = document.getElementById('verification-view');
     const hubView = document.getElementById('hub-view');
@@ -298,48 +303,48 @@
     const statusMsg = document.getElementById('status-msg');
     const signOutBtn = document.getElementById('sign-out-btn');
 
-    signOutBtn.textContent = "Ask for identity verification on next launch";
-
-    if (sessionStorage.getItem('isw_verified_session') === 'true') {
-      showHubPage();
-    }
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const nameInput = document.getElementById('user-name').value.toLowerCase().trim();
-      const emailInput = document.getElementById('user-email').value.toLowerCase().trim();
-      const ceoInput = document.getElementById('ceo-name').value.toLowerCase().trim();
-
-      const encodedName = btoa(nameInput);
-      const encodedEmail = btoa(emailInput);
-      const encodedCeo = btoa(ceoInput);
-
-      if (encodedName === SECURE_KEYS.name && 
-          encodedEmail === SECURE_KEYS.email && 
-          encodedCeo === SECURE_KEYS.ceo) {
+    
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
         
-        statusMsg.className = 'status-msg success';
-        statusMsg.textContent = 'Identity Verified Successfully!';
-
-        sessionStorage.setItem('isw_verified_session', 'true');
-
-        setTimeout(() => {
-          showHubPage();
-        }, 800);
+        verificationView.style.display = 'none';
+        hubView.style.display = 'flex';
       } else {
-        statusMsg.className = 'status-msg error';
-        statusMsg.textContent = 'Verification failed. Incorrect details provided.';
+        
+        verificationView.style.display = 'flex';
+        hubView.style.display = 'none';
       }
     });
 
-    function showHubPage() {
-      verificationView.style.display = 'none';
-      hubView.style.display = 'flex';
-    }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    signOutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('isw_verified_session');
+      const nameInput = document.getElementById('user-name').value.trim().toLowerCase();
+      const emailInput = document.getElementById('user-email').value.trim();
+      const passwordInput = document.getElementById('user-password').value;
+      const ceoInput = document.getElementById('ceo-name').value.trim().toLowerCase();
+
+      
+      if (nameInput !== "sophia isaak" || ceoInput !== "david gimpelevich") {
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = 'Verification failed. Incorrect details provided.';
+        return;
+      }
+
+      try {
+        
+        await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+        statusMsg.className = 'status-msg success';
+        statusMsg.textContent = 'Identity Verified via Firebase!';
+      } catch (error) {
+        statusMsg.className = 'status-msg error';
+        statusMsg.textContent = 'Authentication failed: Invalid credentials or email.';
+      }
+    });
+
+    
+    signOutBtn.addEventListener('click', async () => {
+      await signOut(auth);
       location.reload();
     });
   </script>
