@@ -352,7 +352,6 @@
       <button class="hub-card" data-tile="food">Order Food</button>
       <button class="hub-card" data-tile="card">ISW Card</button>
       <button class="hub-card" data-tile="legal">Legal Action</button>
-      <button class="hub-card" data-tile="legacy">Legacy Home Page</button>
       <button class="hub-card" data-tile="media">ISW Media</button>
       <button class="hub-card" data-tile="assistant">ISW Assistant</button>
       <button class="hub-card" data-tile="flyer">Funny Flyer</button>
@@ -475,61 +474,80 @@
     renderState(state);
   }
 
-  function renderTileView(state) {
-  if (state === 'newsletter') {
-    tileTitle.textContent = "Newsletter Experiences & Feedback";
-    tileBody.innerHTML = `
-      <div class="grid-container" style="max-width: 600px;">
-        <button class="hub-card" id="btn-feedback">Feedback</button>
-        <button class="hub-card" id="btn-interactive-download">7/21/26</button>
-      </div>
-    `;
+  /* Helper to fetch links from Firestore (private_links -> hub_access -> fieldName) */
+  async function openFirestoreLink(fieldName) {
+    try {
+      const docRef = doc(db, "private_links", "hub_access");
+      const docSnap = await getDoc(docRef);
 
-    document.getElementById('btn-feedback').addEventListener('click', async () => {
-      try {
-        const docRef = doc(db, "private_links", "hub_access");
-        const docSnap = await getDoc(docRef);
+      if (docSnap.exists() && docSnap.data()[fieldName]) {
+        let rawLink = docSnap.data()[fieldName].trim();
 
-        if (docSnap.exists() && docSnap.data().feedbackLink) {
-          let rawLink = docSnap.data().feedbackLink.trim();
-
-          if (!/^https?:\/\//i.test(rawLink)) {
-            rawLink = 'https://' + rawLink;
-          }
-
-          window.open(rawLink, '_blank');
-        } else {
-          alert("Feedback link could not be found in Firebase.");
+        if (!/^https?:\/\//i.test(rawLink)) {
+          rawLink = 'https://' + rawLink;
         }
-      } catch (error) {
-        console.error("Error fetching feedback link:", error);
-        alert("Failed to load feedback link. Please try again.");
+
+        window.open(rawLink, '_blank');
+      } else {
+        alert(`Link for ${fieldName} could not be found in Firebase.`);
       }
-    });
-
-    document.getElementById('btn-interactive-download').addEventListener('click', () => {
-      pushNavState('interactive-download');
-    });
-
-  } else if (state === 'interactive-download') {
-    tileTitle.textContent = "Interactive Download";
-    tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
-
-  } else if (state === 'unsubscribe') {
-    tileTitle.textContent = "Unsubscribe from Newsletter";
-    tileBody.innerHTML = `<iframe id="embed-frame" src="unsubscribe.html"></iframe>`;
-
-  } else {
-    tileTitle.textContent = state;
-    tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
+    } catch (error) {
+      console.error(`Error fetching ${fieldName} link:`, error);
+      alert("Failed to load link. Please try again.");
+    }
   }
-}
+
+  function renderTileView(state) {
+    if (state === 'newsletter') {
+      tileTitle.textContent = "Newsletter Experiences & Feedback";
+      tileBody.innerHTML = `
+        <div class="grid-container" style="max-width: 600px;">
+          <button class="hub-card" id="btn-feedback">Feedback</button>
+          <button class="hub-card" id="btn-interactive-download">7/21/26</button>
+        </div>
+      `;
+
+      document.getElementById('btn-feedback').addEventListener('click', () => {
+        openFirestoreLink('feedbackLink');
+      });
+
+      document.getElementById('btn-interactive-download').addEventListener('click', () => {
+        pushNavState('interactive-download');
+      });
+
+    } else if (state === 'interactive-download') {
+      tileTitle.textContent = "Interactive Download";
+      tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
+
+    } else if (state === 'unsubscribe') {
+      tileTitle.textContent = "Unsubscribe from Newsletter";
+      tileBody.innerHTML = `<iframe id="embed-frame" src="unsubscribe.html"></iframe>`;
+
+    } else if (state === 'assistant') {
+      tileTitle.textContent = "ISW Assistant";
+      tileBody.innerHTML = `<iframe id="embed-frame" src="iswassistant.html"></iframe>`;
+
+    } else {
+      tileTitle.textContent = state;
+      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
+    }
+  }
 
   /* Event Listeners */
   document.querySelectorAll('.hub-card').forEach(card => {
     card.addEventListener('click', () => {
       const stateKey = card.getAttribute('data-tile') || card.textContent.trim();
-      pushNavState(stateKey);
+
+      // Intercept direct external link tiles
+      if (stateKey === 'food') {
+        openFirestoreLink('orderFood');
+      } else if (stateKey === 'card') {
+        openFirestoreLink('getCard');
+      } else if (stateKey === 'media') {
+        openFirestoreLink('iswMedia');
+      } else {
+        pushNavState(stateKey);
+      }
     });
   });
 
