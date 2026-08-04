@@ -14,6 +14,7 @@
       --isw-yellow-hover: #e0a800;
       --error-red: #d93025;
       --success-green: #188038;
+      --material-tile-bg: #ffffff;
     }
 
     * {
@@ -31,15 +32,13 @@
       min-height: 100vh;
     }
 
-    /* --- Universal Navigation Button (Liquid Glass Icon-Only) --- */
-    #univ-nav {
+    /* --- Universal Navigation & Floating Glass Buttons --- */
+    .glass-bar {
       position: fixed;
       top: 1.25rem;
-      left: 1.25rem;
       z-index: 1000;
       display: none;
       align-items: center;
-      gap: 0.3rem;
       padding: 0.35rem;
       background: rgba(255, 255, 255, 0.35);
       backdrop-filter: blur(16px) saturate(180%);
@@ -48,6 +47,15 @@
       border-radius: 40px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8);
       transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    #univ-nav {
+      left: 1.25rem;
+      gap: 0.3rem;
+    }
+
+    #settings-nav-btn-container {
+      right: 1.25rem;
     }
 
     .univ-nav-btn {
@@ -215,15 +223,7 @@
       color: var(--isw-blue);
       font-size: 0.95rem;
       text-align: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .terms-link {
-      color: var(--isw-blue);
-      font-size: 0.85rem;
-      text-decoration: underline;
       margin-bottom: 2.5rem;
-      cursor: pointer;
     }
 
     .grid-container {
@@ -290,17 +290,83 @@
       background: #fff;
     }
 
+    /* --- Material You Settings Styles --- */
+    #settings-view {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      min-height: 80vh;
+      padding: 6rem 1.5rem 2rem 1.5rem;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #settings-view h2 {
+      font-size: 2.2rem;
+      color: var(--isw-blue);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    .material-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 2px; /* Subtle seam between tiles */
+    }
+
+    .material-tile {
+      background-color: var(--material-tile-bg);
+      color: var(--isw-dark-blue);
+      border: none;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .material-tile:hover {
+      background-color: #f0f4f8;
+    }
+
+    /* Material You Rounded Corner Hierarchy */
+    .material-tile-top {
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
+
+    .material-tile-middle {
+      border-radius: 4px;
+    }
+
+    .material-tile-bottom {
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+    }
+
     @media (max-width: 600px) {
       .main-heading { font-size: 2.2rem; }
       .grid-container { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
       .hub-card { font-size: 0.85rem; }
       #univ-nav { top: 0.8rem; left: 0.8rem; }
+      #settings-nav-btn-container { top: 0.8rem; right: 0.8rem; }
     }
   </style>
 </head>
 <body>
 
-  <div id="univ-nav">
+  <div id="univ-nav" class="glass-bar">
     <button class="univ-nav-btn" id="nav-logout-btn" title="Log Out">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
     </button>
@@ -309,6 +375,13 @@
     </button>
     <button class="univ-nav-btn" id="nav-forward-btn" title="Forward" style="display: none;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+
+  <div id="settings-nav-btn-container" class="glass-bar">
+    <button class="univ-nav-btn" id="settings-toggle-btn" title="Settings">
+      <svg id="icon-gear" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <svg id="icon-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
     </button>
   </div>
 
@@ -342,22 +415,40 @@
   </div>
 
   <div id="hub-view">
-  <h1 class="main-heading">Your happy place.</h1>
-  <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
+    <h1 class="main-heading">Your happy place.</h1>
+    <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
 
-  <div class="grid-container">
-    <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
-    <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
-    <button class="hub-card" data-tile="food">Order Food</button>
-    <button class="hub-card" data-tile="card">ISW Card</button>
-    <button class="hub-card" data-tile="legal">Legal Action</button>
-    <button class="hub-card" data-tile="media">ISW Media</button>
-    <button class="hub-card" data-tile="assistant">ISW Assistant</button>
-    <button class="hub-card" data-tile="flyer">Funny Flyer</button>
-    <button class="hub-card" data-tile="productions">ISW Productions</button>
-    <button class="hub-card" data-tile="terms">Terms & Conditions</button>
+    <div class="grid-container">
+      <button class="hub-card" data-tile="terms">Terms & Conditions</button>
+      <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
+      <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
+      <button class="hub-card" data-tile="food">Order Food</button>
+      <button class="hub-card" data-tile="card">ISW Card</button>
+      <button class="hub-card" data-tile="legal">Legal Action</button>
+      <button class="hub-card" data-tile="media">ISW Media</button>
+      <button class="hub-card" data-tile="assistant">ISW Assistant</button>
+      <button class="hub-card" data-tile="flyer">Funny Flyer</button>
+      <button class="hub-card" data-tile="productions">ISW Productions</button>
+    </div>
   </div>
-</div>
+
+  <div id="settings-view">
+    <h2>Settings</h2>
+    <div class="material-group">
+      <button class="material-tile material-tile-top" id="btn-about-app">
+        <span>About this App</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="material-tile material-tile-middle" id="btn-about-dev">
+        <span>About Developer</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="material-tile material-tile-bottom" id="btn-about-version">
+        <span>About Version</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </div>
 
   <div id="tile-content-view">
     <h2 id="tile-title">Tile Content</h2>
@@ -419,6 +510,7 @@
 
   const verificationView = document.getElementById('verification-view');
   const hubView = document.getElementById('hub-view');
+  const settingsView = document.getElementById('settings-view');
   const tileContentView = document.getElementById('tile-content-view');
   const tileTitle = document.getElementById('tile-title');
   const tileBody = document.getElementById('tile-body');
@@ -427,6 +519,11 @@
   const submitBtn = document.getElementById('submit-btn');
 
   const univNav = document.getElementById('univ-nav');
+  const settingsNavBtnContainer = document.getElementById('settings-nav-btn-container');
+  const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+  const iconGear = document.getElementById('icon-gear');
+  const iconClose = document.getElementById('icon-close');
+
   const navLogoutBtn = document.getElementById('nav-logout-btn');
   const navBackBtn = document.getElementById('nav-back-btn');
   const navForwardBtn = document.getElementById('nav-forward-btn');
@@ -435,21 +532,42 @@
   let navStack = ['home'];
   let navIndex = 0;
 
-  function triggerNavBounce() {
-    univNav.classList.remove('bounce');
-    void univNav.offsetWidth;
-    univNav.classList.add('bounce');
+  function triggerBounce(element) {
+    element.classList.remove('bounce');
+    void element.offsetWidth;
+    element.classList.add('bounce');
   }
 
   function renderState(state) {
+    // Synchronize Top Right Settings Gear / Close Icon
+    if (state === 'settings') {
+      iconGear.style.display = 'none';
+      iconClose.style.display = 'block';
+      settingsToggleBtn.setAttribute('title', 'Close Settings');
+    } else {
+      iconGear.style.display = 'block';
+      iconClose.style.display = 'none';
+      settingsToggleBtn.setAttribute('title', 'Settings');
+    }
+
+    // View Switching Logic
     if (state === 'home') {
       hubView.style.display = 'flex';
+      settingsView.style.display = 'none';
       tileContentView.style.display = 'none';
 
       navLogoutBtn.style.display = 'flex';
       navBackBtn.style.display = 'none';
+    } else if (state === 'settings') {
+      hubView.style.display = 'none';
+      settingsView.style.display = 'flex';
+      tileContentView.style.display = 'none';
+
+      navLogoutBtn.style.display = 'none';
+      navBackBtn.style.display = 'flex';
     } else {
       hubView.style.display = 'none';
+      settingsView.style.display = 'none';
       tileContentView.style.display = 'flex';
 
       navLogoutBtn.style.display = 'none';
@@ -464,7 +582,8 @@
       navForwardBtn.style.display = 'none';
     }
 
-    triggerNavBounce();
+    triggerBounce(univNav);
+    triggerBounce(settingsNavBtnContainer);
   }
 
   function pushNavState(state) {
@@ -473,38 +592,37 @@
     navIndex++;
     renderState(state);
   }
-    
-async function openFirestoreLink(fieldName) {
-  
-  const newTab = window.open('about:blank', '_blank');
 
-  try {
-    const docRef = doc(db, "private_links", "hub_access");
-    const docSnap = await getDoc(docRef);
+  /* Helper to fetch links from Firestore safely without triggering popup blockers */
+  async function openFirestoreLink(fieldName) {
+    const newTab = window.open('about:blank', '_blank');
 
-    if (docSnap.exists() && docSnap.data()[fieldName]) {
-      let rawLink = docSnap.data()[fieldName].trim();
+    try {
+      const docRef = doc(db, "private_links", "hub_access");
+      const docSnap = await getDoc(docRef);
 
-      if (!/^https?:\/\//i.test(rawLink)) {
-        rawLink = 'https://' + rawLink;
-      }
+      if (docSnap.exists() && docSnap.data()[fieldName]) {
+        let rawLink = docSnap.data()[fieldName].trim();
 
-      
-      if (newTab) {
-        newTab.location.href = rawLink;
+        if (!/^https?:\/\//i.test(rawLink)) {
+          rawLink = 'https://' + rawLink;
+        }
+
+        if (newTab) {
+          newTab.location.href = rawLink;
+        } else {
+          window.location.href = rawLink;
+        }
       } else {
-        window.location.href = rawLink;
+        if (newTab) newTab.close();
+        alert(`Link for ${fieldName} could not be found in Firebase.`);
       }
-    } else {
+    } catch (error) {
       if (newTab) newTab.close();
-      alert(`Link for ${fieldName} could not be found in Firebase.`);
+      console.error(`Error fetching ${fieldName} link:`, error);
+      alert("Failed to load link. Please try again.");
     }
-  } catch (error) {
-    if (newTab) newTab.close();
-    console.error(`Error fetching ${fieldName} link:`, error);
-    alert("Failed to load link. Please try again.");
   }
-}
 
   function renderTileView(state) {
     if (state === 'newsletter') {
@@ -536,32 +654,76 @@ async function openFirestoreLink(fieldName) {
       tileTitle.textContent = "ISW Assistant";
       tileBody.innerHTML = `<iframe id="embed-frame" src="iswassistant.html"></iframe>`;
 
+    } else if (state === 'about-app') {
+      tileTitle.textContent = "About this App";
+      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ App Information Placeholder ]</p>`;
+
+    } else if (state === 'about-dev') {
+      tileTitle.textContent = "About Developer";
+      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ Developer Information Placeholder ]</p>`;
+
+    } else if (state === 'about-version') {
+      tileTitle.textContent = "About Version";
+      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ Version Details Placeholder ]</p>`;
+
     } else {
       tileTitle.textContent = state;
       tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
     }
   }
 
- /* Event Listeners */
-document.querySelectorAll('.hub-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const tileAttr = card.getAttribute('data-tile');
+  /* Settings Toggle Button Listener */
+  settingsToggleBtn.addEventListener('click', () => {
+    const currentState = navStack[navIndex];
 
-    if (tileAttr === 'terms') {
-      openFirestoreLink('termsConditions');
-    } else if (tileAttr === 'food') {
-      openFirestoreLink('orderFood');
-    } else if (tileAttr === 'card') {
-      openFirestoreLink('getCard');
-    } else if (tileAttr === 'media') {
-      openFirestoreLink('iswMedia');
+    if (currentState === 'settings') {
+      // Return to previous view
+      if (navIndex > 0) {
+        navIndex--;
+        renderState(navStack[navIndex]);
+      } else {
+        renderState('home');
+      }
     } else {
-      const stateKey = tileAttr || card.textContent.trim();
-      pushNavState(stateKey);
+      // Open settings view
+      pushNavState('settings');
     }
   });
-});
 
+  /* Settings List Item Click Handlers */
+  document.getElementById('btn-about-app').addEventListener('click', () => {
+    pushNavState('about-app');
+  });
+
+  document.getElementById('btn-about-dev').addEventListener('click', () => {
+    pushNavState('about-dev');
+  });
+
+  document.getElementById('btn-about-version').addEventListener('click', () => {
+    pushNavState('about-version');
+  });
+
+  /* Hub Card Event Listeners */
+  document.querySelectorAll('.hub-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const tileAttr = card.getAttribute('data-tile');
+
+      if (tileAttr === 'terms') {
+        openFirestoreLink('termsConditions');
+      } else if (tileAttr === 'food') {
+        openFirestoreLink('orderFood');
+      } else if (tileAttr === 'card') {
+        openFirestoreLink('getCard');
+      } else if (tileAttr === 'media') {
+        openFirestoreLink('iswMedia');
+      } else {
+        const stateKey = tileAttr || card.textContent.trim();
+        pushNavState(stateKey);
+      }
+    });
+  });
+
+  /* Universal Navigation Handlers */
   navBackBtn.addEventListener('click', () => {
     if (navIndex > 0) {
       navIndex--;
@@ -581,19 +743,24 @@ document.querySelectorAll('.hub-card').forEach(card => {
     location.reload();
   });
 
+  /* Authentication State Listener */
   onAuthStateChanged(auth, (user) => {
     if (user) {
       verificationView.style.display = 'none';
       univNav.style.display = 'flex';
+      settingsNavBtnContainer.style.display = 'flex';
       renderState('home');
     } else {
       verificationView.style.display = 'flex';
       hubView.style.display = 'none';
+      settingsView.style.display = 'none';
       tileContentView.style.display = 'none';
       univNav.style.display = 'none';
+      settingsNavBtnContainer.style.display = 'none';
     }
   });
 
+  /* Sign In Form Handler */
   async function handleSignIn() {
     statusMsg.style.display = 'none';
     
@@ -633,7 +800,6 @@ document.querySelectorAll('.hub-card').forEach(card => {
     e.preventDefault();
     handleSignIn();
   });
-    /* Stable Version 1 8/4/26 10:48 AM */
 </script>
 </body>
 </html>
