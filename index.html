@@ -342,22 +342,22 @@
   </div>
 
   <div id="hub-view">
-    <h1 class="main-heading">Your happy place.</h1>
-    <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
-    <a href="#" class="terms-link">Terms and Conditions</a>
+  <h1 class="main-heading">Your happy place.</h1>
+  <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
 
-    <div class="grid-container">
-      <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
-      <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
-      <button class="hub-card" data-tile="food">Order Food</button>
-      <button class="hub-card" data-tile="card">ISW Card</button>
-      <button class="hub-card" data-tile="legal">Legal Action</button>
-      <button class="hub-card" data-tile="media">ISW Media</button>
-      <button class="hub-card" data-tile="assistant">ISW Assistant</button>
-      <button class="hub-card" data-tile="flyer">Funny Flyer</button>
-      <button class="hub-card" data-tile="productions">ISW Productions</button>
-    </div>
+  <div class="grid-container">
+    <button class="hub-card" data-tile="terms">Terms & Conditions</button>
+    <button class="hub-card" data-tile="newsletter">Newsletter Experiences & Feedback</button>
+    <button class="hub-card" data-tile="unsubscribe">Unsubscribe from the Newsletter</button>
+    <button class="hub-card" data-tile="food">Order Food</button>
+    <button class="hub-card" data-tile="card">ISW Card</button>
+    <button class="hub-card" data-tile="legal">Legal Action</button>
+    <button class="hub-card" data-tile="media">ISW Media</button>
+    <button class="hub-card" data-tile="assistant">ISW Assistant</button>
+    <button class="hub-card" data-tile="flyer">Funny Flyer</button>
+    <button class="hub-card" data-tile="productions">ISW Productions</button>
   </div>
+</div>
 
   <div id="tile-content-view">
     <h2 id="tile-title">Tile Content</h2>
@@ -547,7 +547,9 @@ document.querySelectorAll('.hub-card').forEach(card => {
   card.addEventListener('click', () => {
     const tileAttr = card.getAttribute('data-tile');
 
-    if (tileAttr === 'food') {
+    if (tileAttr === 'terms') {
+      openFirestoreLink('termsConditions');
+    } else if (tileAttr === 'food') {
       openFirestoreLink('orderFood');
     } else if (tileAttr === 'card') {
       openFirestoreLink('getCard');
