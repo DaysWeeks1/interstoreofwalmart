@@ -366,216 +366,233 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { 
-      initializeAppCheck, 
-      ReCaptchaV3Provider 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { 
+    initializeAppCheck, 
+    ReCaptchaV3Provider 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
+  import { 
+    getFirestore, 
+    doc, 
+    getDoc 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC6bF5NMdFtqYeVvAHKHIrNm38dNEClEwA",
-      authDomain: "isw-pwa.firebaseapp.com",
-      projectId: "isw-pwa",
-      storageBucket: "isw-pwa.appspot.com",
-      messagingSenderId: "108445271932",
-      appId: "1:108445271932:web:922266a82378a539d086f9"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyC6bF5NMdFtqYeVvAHKHIrNm38dNEClEwA",
+    authDomain: "isw-pwa.firebaseapp.com",
+    projectId: "isw-pwa",
+    storageBucket: "isw-pwa.appspot.com",
+    messagingSenderId: "108445271932",
+    appId: "1:108445271932:web:922266a82378a539d086f9"
+  };
 
-    const app = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
+      isTokenAutoRefreshEnabled: true
+    });
+  } catch (err) {
+    console.warn("App Check skipped:", err);
+  }
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  let recaptchaWidgetId = null;
+
+  window.addEventListener('load', () => {
+    const checkRecaptcha = setInterval(() => {
+      if (typeof grecaptcha !== 'undefined' && grecaptcha.render) {
+        clearInterval(checkRecaptcha);
+        recaptchaWidgetId = grecaptcha.render('recaptcha-element', {
+          'sitekey': '6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'
+        });
+      }
+    }, 100);
+  });
+
+  const verificationView = document.getElementById('verification-view');
+  const hubView = document.getElementById('hub-view');
+  const tileContentView = document.getElementById('tile-content-view');
+  const tileTitle = document.getElementById('tile-title');
+  const tileBody = document.getElementById('tile-body');
+  const form = document.getElementById('verification-form');
+  const statusMsg = document.getElementById('status-msg');
+  const submitBtn = document.getElementById('submit-btn');
+
+  const univNav = document.getElementById('univ-nav');
+  const navLogoutBtn = document.getElementById('nav-logout-btn');
+  const navBackBtn = document.getElementById('nav-back-btn');
+  const navForwardBtn = document.getElementById('nav-forward-btn');
+
+  /* Navigation History State Machine */
+  let navStack = ['home'];
+  let navIndex = 0;
+
+  function triggerNavBounce() {
+    univNav.classList.remove('bounce');
+    void univNav.offsetWidth;
+    univNav.classList.add('bounce');
+  }
+
+  function renderState(state) {
+    if (state === 'home') {
+      hubView.style.display = 'flex';
+      tileContentView.style.display = 'none';
+
+      navLogoutBtn.style.display = 'flex';
+      navBackBtn.style.display = 'none';
+    } else {
+      hubView.style.display = 'none';
+      tileContentView.style.display = 'flex';
+
+      navLogoutBtn.style.display = 'none';
+      navBackBtn.style.display = 'flex';
+
+      renderTileView(state);
+    }
+
+    if (navIndex < navStack.length - 1) {
+      navForwardBtn.style.display = 'flex';
+    } else {
+      navForwardBtn.style.display = 'none';
+    }
+
+    triggerNavBounce();
+  }
+
+  function pushNavState(state) {
+    navStack = navStack.slice(0, navIndex + 1);
+    navStack.push(state);
+    navIndex++;
+    renderState(state);
+  }
+
+  function renderTileView(state) {
+    if (state === 'newsletter') {
+      tileTitle.textContent = "Newsletter Experiences & Feedback";
+      tileBody.innerHTML = `
+        <div class="grid-container" style="max-width: 600px;">
+          <button class="hub-card" id="btn-feedback">Feedback</button>
+          <button class="hub-card" id="btn-interactive-download">7/21/26</button>
+        </div>
+      `;
+
+      // Dynamic fetch from Firestore on click
+      document.getElementById('btn-feedback').addEventListener('click', async () => {
+        try {
+          const docRef = doc(db, "private_links", "hub_access");
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists() && docSnap.data().feedbackLink) {
+            window.location.href = docSnap.data().feedbackLink;
+          } else {
+            alert("Feedback link could not be found.");
+          }
+        } catch (error) {
+          console.error("Error fetching feedback link:", error);
+          alert("Failed to load feedback link. Please try again.");
+        }
+      });
+
+      document.getElementById('btn-interactive-download').addEventListener('click', () => {
+        pushNavState('interactive-download');
+      });
+    } else if (state === 'interactive-download') {
+      tileTitle.textContent = "Interactive Download";
+      tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
+    } else {
+      tileTitle.textContent = state;
+      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
+    }
+  }
+
+  /* Event Listeners */
+  document.querySelectorAll('.hub-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const stateKey = card.getAttribute('data-tile') || card.textContent.trim();
+      pushNavState(stateKey);
+    });
+  });
+
+  navBackBtn.addEventListener('click', () => {
+    if (navIndex > 0) {
+      navIndex--;
+      renderState(navStack[navIndex]);
+    }
+  });
+
+  navForwardBtn.addEventListener('click', () => {
+    if (navIndex < navStack.length - 1) {
+      navIndex++;
+      renderState(navStack[navIndex]);
+    }
+  });
+
+  navLogoutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+    location.reload();
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      verificationView.style.display = 'none';
+      univNav.style.display = 'flex';
+      renderState('home');
+    } else {
+      verificationView.style.display = 'flex';
+      hubView.style.display = 'none';
+      tileContentView.style.display = 'none';
+      univNav.style.display = 'none';
+    }
+  });
+
+  async function handleSignIn() {
+    statusMsg.style.display = 'none';
+    
+    const emailInput = document.getElementById('user-email').value.trim();
+    const passwordInput = document.getElementById('user-password').value;
+
+    if (!emailInput || !passwordInput) {
+      statusMsg.className = 'status-msg error';
+      statusMsg.textContent = 'Please enter both your email and password.';
+      return;
+    }
+
+    let recaptchaResponse = '';
+    if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
+      recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
+    }
+
+    if (!recaptchaResponse) {
+      statusMsg.className = 'status-msg error';
+      statusMsg.textContent = 'Please check the "I\'m not a robot" box.';
+      return;
+    }
 
     try {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
-        isTokenAutoRefreshEnabled: true
-      });
-    } catch (err) {
-      console.warn("App Check skipped:", err);
+      await signInWithEmailAndPassword(auth, emailInput, passwordInput);
+      statusMsg.className = 'status-msg success';
+      statusMsg.textContent = 'Signed in successfully!';
+    } catch (error) {
+      console.error("Firebase Sign In Error:", error);
+      statusMsg.className = 'status-msg error';
+      statusMsg.textContent = 'Authentication failed: Invalid email or password.';
     }
+  }
 
-    const auth = getAuth(app);
-    let recaptchaWidgetId = null;
-
-    window.addEventListener('load', () => {
-      const checkRecaptcha = setInterval(() => {
-        if (typeof grecaptcha !== 'undefined' && grecaptcha.render) {
-          clearInterval(checkRecaptcha);
-          recaptchaWidgetId = grecaptcha.render('recaptcha-element', {
-            'sitekey': '6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'
-          });
-        }
-      }, 100);
-    });
-
-    const verificationView = document.getElementById('verification-view');
-    const hubView = document.getElementById('hub-view');
-    const tileContentView = document.getElementById('tile-content-view');
-    const tileTitle = document.getElementById('tile-title');
-    const tileBody = document.getElementById('tile-body');
-    const form = document.getElementById('verification-form');
-    const statusMsg = document.getElementById('status-msg');
-    const submitBtn = document.getElementById('submit-btn');
-
-    const univNav = document.getElementById('univ-nav');
-    const navLogoutBtn = document.getElementById('nav-logout-btn');
-    const navBackBtn = document.getElementById('nav-back-btn');
-    const navForwardBtn = document.getElementById('nav-forward-btn');
-
-    /* Navigation History State Machine */
-    let navStack = ['home'];
-    let navIndex = 0;
-
-    function triggerNavBounce() {
-      univNav.classList.remove('bounce');
-      void univNav.offsetWidth;
-      univNav.classList.add('bounce');
-    }
-
-    function renderState(state) {
-      if (state === 'home') {
-        hubView.style.display = 'flex';
-        tileContentView.style.display = 'none';
-
-        navLogoutBtn.style.display = 'flex';
-        navBackBtn.style.display = 'none';
-      } else {
-        hubView.style.display = 'none';
-        tileContentView.style.display = 'flex';
-
-        navLogoutBtn.style.display = 'none';
-        navBackBtn.style.display = 'flex';
-
-        renderTileView(state);
-      }
-
-      // Show forward button if there are forward states in history
-      if (navIndex < navStack.length - 1) {
-        navForwardBtn.style.display = 'flex';
-      } else {
-        navForwardBtn.style.display = 'none';
-      }
-
-      triggerNavBounce();
-    }
-
-    function pushNavState(state) {
-      // Truncate forward history if pushing from middle of stack
-      navStack = navStack.slice(0, navIndex + 1);
-      navStack.push(state);
-      navIndex++;
-      renderState(state);
-    }
-
-    function renderTileView(state) {
-      if (state === 'newsletter') {
-        tileTitle.textContent = "Newsletter Experiences & Feedback";
-        tileBody.innerHTML = `
-          <div class="grid-container" style="max-width: 600px;">
-            <button class="hub-card" id="btn-feedback">Feedback</button>
-            <button class="hub-card" id="btn-interactive-download">7/21/26</button>
-          </div>
-        `;
-
-        document.getElementById('btn-feedback').addEventListener('click', () => {
-          window.location.href = "feedbackLink";
-        });
-
-        document.getElementById('btn-interactive-download').addEventListener('click', () => {
-          pushNavState('interactive-download');
-        });
-      } else if (state === 'interactive-download') {
-        tileTitle.textContent = "Interactive Download";
-        tileBody.innerHTML = `<iframe id="embed-frame" src="interactive-download.html"></iframe>`;
-      } else {
-        tileTitle.textContent = state;
-        tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">You are viewing details for ${state}.</p>`;
-      }
-    }
-
-    /* Event Listeners */
-    document.querySelectorAll('.hub-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const stateKey = card.getAttribute('data-tile') || card.textContent.trim();
-        pushNavState(stateKey);
-      });
-    });
-
-    navBackBtn.addEventListener('click', () => {
-      if (navIndex > 0) {
-        navIndex--;
-        renderState(navStack[navIndex]);
-      }
-    });
-
-    navForwardBtn.addEventListener('click', () => {
-      if (navIndex < navStack.length - 1) {
-        navIndex++;
-        renderState(navStack[navIndex]);
-      }
-    });
-
-    navLogoutBtn.addEventListener('click', async () => {
-      await signOut(auth);
-      location.reload();
-    });
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        verificationView.style.display = 'none';
-        univNav.style.display = 'flex';
-        renderState('home');
-      } else {
-        verificationView.style.display = 'flex';
-        hubView.style.display = 'none';
-        tileContentView.style.display = 'none';
-        univNav.style.display = 'none';
-      }
-    });
-
-    async function handleSignIn() {
-      statusMsg.style.display = 'none';
-      
-      const emailInput = document.getElementById('user-email').value.trim();
-      const passwordInput = document.getElementById('user-password').value;
-
-      if (!emailInput || !passwordInput) {
-        statusMsg.className = 'status-msg error';
-        statusMsg.textContent = 'Please enter both your email and password.';
-        return;
-      }
-
-      let recaptchaResponse = '';
-      if (typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null) {
-        recaptchaResponse = grecaptcha.getResponse(recaptchaWidgetId);
-      }
-
-      if (!recaptchaResponse) {
-        statusMsg.className = 'status-msg error';
-        statusMsg.textContent = 'Please check the "I\'m not a robot" box.';
-        return;
-      }
-
-      try {
-        await signInWithEmailAndPassword(auth, emailInput, passwordInput);
-        statusMsg.className = 'status-msg success';
-        statusMsg.textContent = 'Signed in successfully!';
-      } catch (error) {
-        console.error("Firebase Sign In Error:", error);
-        statusMsg.className = 'status-msg error';
-        statusMsg.textContent = 'Authentication failed: Invalid email or password.';
-      }
-    }
-
-    submitBtn.addEventListener('click', handleSignIn);
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      handleSignIn();
-    });
-  </script>
+  submitBtn.addEventListener('click', handleSignIn);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleSignIn();
+  });
+</script>
 </body>
 </html>
