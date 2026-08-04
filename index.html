@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ISW - International Store of Walmart</title>
+  <link rel="icon" type="image/png" href="media/logo.png">
   <script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
   <style>
     :root {
@@ -47,6 +48,7 @@
       border-radius: 40px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8);
       transition: transform 0.2s ease, background-color 0.2s ease, left 0.3s ease;
+      overflow: hidden; /* Contains the progress line inside rounded corners */
     }
 
     #univ-nav {
@@ -71,6 +73,19 @@
       display: flex;
       align-items: center;
       gap: 0.3rem;
+    }
+
+    /* --- Audio Progress Line --- */
+    .audio-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      width: 0%;
+      background-color: var(--isw-blue);
+      border-radius: 0 2px 2px 0;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 6px rgba(0, 113, 220, 0.6);
     }
 
     .univ-nav-btn {
@@ -400,6 +415,9 @@
     <!-- Audio controls group gets inserted here dynamically -->
   </div>
 
+  <!-- Shared Audio Progress Line Element -->
+  <div id="audio-progress-bar" class="audio-progress-bar"></div>
+
   <!-- Audio Controls Group (Shared Template) -->
   <div id="audio-controls-group">
     <button class="univ-nav-btn" id="audio-toggle-btn" title="Pause Audio">
@@ -560,6 +578,7 @@
   let currentAudioIndex = 0;
   const audioPlayer = document.getElementById('bg-audio-player');
   const audioControlsGroup = document.getElementById('audio-controls-group');
+  const audioProgressBar = document.getElementById('audio-progress-bar');
   const audioToggleBtn = document.getElementById('audio-toggle-btn');
   const audioSkipBtn = document.getElementById('audio-skip-btn');
   const iconPlay = document.getElementById('icon-play');
@@ -587,6 +606,16 @@
       updateAudioButtonState(false);
     });
   }
+
+  // Track playback progress & update progress line
+  audioPlayer.addEventListener('timeupdate', () => {
+    if (audioPlayer.duration) {
+      const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+      audioProgressBar.style.width = `${progressPercent}%`;
+    } else {
+      audioProgressBar.style.width = '0%';
+    }
+  });
 
   // Skip to next track in playlist
   function skipToNextTrack() {
@@ -618,9 +647,15 @@
     skipToNextTrack();
   });
 
+  // Move Audio Bar & Progress Line to correct parent element
+  function attachAudioControls(targetContainer) {
+    targetContainer.appendChild(audioControlsGroup);
+    targetContainer.appendChild(audioProgressBar);
+  }
+
   // Auto-start playback on initial page load
   window.addEventListener('DOMContentLoaded', () => {
-    standaloneAudioContainer.appendChild(audioControlsGroup);
+    attachAudioControls(standaloneAudioContainer);
     playTrack(currentAudioIndex);
   });
 
@@ -889,9 +924,9 @@
     if (user) {
       verificationView.style.display = 'none';
 
-      // Show signed-in nav bar & Move audio controls inside Universal Nav
+      // Show signed-in nav bar & Move audio controls + progress line inside Universal Nav
       univNav.style.display = 'flex';
-      univNav.appendChild(audioControlsGroup);
+      attachAudioControls(univNav);
       standaloneAudioContainer.style.display = 'none';
 
       settingsNavBtnContainer.style.display = 'flex';
@@ -902,9 +937,9 @@
       settingsView.style.display = 'none';
       tileContentView.style.display = 'none';
 
-      // Hide signed-in nav bar & Move audio controls to standalone top-left container
+      // Hide signed-in nav bar & Move audio controls + progress line to standalone top-left container
       univNav.style.display = 'none';
-      standaloneAudioContainer.appendChild(audioControlsGroup);
+      attachAudioControls(standaloneAudioContainer);
       standaloneAudioContainer.style.display = 'flex';
 
       settingsNavBtnContainer.style.display = 'none';
