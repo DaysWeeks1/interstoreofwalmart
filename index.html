@@ -284,7 +284,7 @@
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { 
       initializeAppCheck, 
-      ReCaptchaV2Provider 
+      ReCaptchaV3Provider 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
 
     const firebaseConfig = {
@@ -300,11 +300,11 @@
 
     try {
       initializeAppCheck(app, {
-        provider: new ReCaptchaV2Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
+        provider: new ReCaptchaV3Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
         isTokenAutoRefreshEnabled: true
       });
     } catch (err) {
-      console.warn("App Check failed to initialize:", err);
+      console.warn("App Check not enabled for this key/domain, continuing auth logic.");
     }
 
     const auth = getAuth(app);
@@ -339,7 +339,7 @@
       const recaptchaResponse = typeof grecaptcha !== 'undefined' ? grecaptcha.getResponse() : '';
       if (typeof grecaptcha !== 'undefined' && !recaptchaResponse) {
         statusMsg.className = 'status-msg error';
-        statusMsg.textContent = 'Please complete the reCAPTCHA check.';
+        statusMsg.textContent = 'Please check the "I\'m not a robot" box.';
         return;
       }
 
