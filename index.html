@@ -16,7 +16,7 @@
       --isw-yellow-hover: #e0a800;
       --error-red: #d93025;
       --success-green: #188038;
-      --material-tile-bg: #ffffff;
+      --material-tile-bg: #e0e0e0;
     }
 
     * {
@@ -49,7 +49,7 @@
       border-radius: 40px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8);
       transition: transform 0.2s ease, background-color 0.2s ease, left 0.3s ease;
-      overflow: visible; /* Allows glowing outline to expand past border */
+      overflow: visible;
     }
 
     #univ-nav {
@@ -83,7 +83,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none; /* Clicking through SVG to buttons */
+      pointer-events: none;
       overflow: visible;
       border-radius: 40px;
     }
@@ -93,9 +93,7 @@
       stroke: var(--isw-blue);
       stroke-width: 3.5;
       stroke-linecap: round;
-      /* Glowing effect for the blue line */
       filter: drop-shadow(0px 0px 4px rgba(0, 113, 220, 0.9)) drop-shadow(0px 0px 8px rgba(0, 113, 220, 0.6));
-      /* Rotate so stroke begins at the bottom-center */
       transform-origin: center;
       transform: rotate(90deg);
       transition: stroke-dashoffset 0.1s linear;
@@ -376,7 +374,7 @@
     }
 
     .material-tile:hover {
-      background-color: #f0f4f8;
+      background-color: #d1d1d1;
     }
 
     .material-tile-top {
@@ -395,6 +393,40 @@
       border-top-right-radius: 4px;
       border-bottom-left-radius: 24px;
       border-bottom-right-radius: 24px;
+    }
+
+    .info-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 700;
+      color: var(--isw-dark-blue);
+    }
+
+    .info-value {
+      color: #444;
+      font-weight: 500;
     }
 
     @media (max-width: 600px) {
@@ -437,13 +469,10 @@
   <!-- Audio Controls Group (Shared Template) -->
   <div id="audio-controls-group">
     <button class="univ-nav-btn" id="audio-toggle-btn" title="Pause Audio">
-      <!-- Pause Icon -->
       <svg id="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-      <!-- Play Icon -->
       <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
     </button>
 
-    <!-- Skip Track Button -->
     <button class="univ-nav-btn" id="audio-skip-btn" title="Skip to Next Track">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 21 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
     </button>
@@ -623,7 +652,6 @@
     });
   }
 
-  // Synchronize Glowing Border Progress around active Glass Bar
   function updateBorderProgress() {
     const activeContainer = univNav.style.display !== 'none' ? univNav : standaloneAudioContainer;
     const path = activeContainer.querySelector('.progress-border-path');
@@ -642,20 +670,16 @@
     }
   }
 
-  // Track playback progress
   audioPlayer.addEventListener('timeupdate', updateBorderProgress);
   audioPlayer.addEventListener('loadedmetadata', updateBorderProgress);
 
-  // Skip to next track in playlist
   function skipToNextTrack() {
     currentAudioIndex = (currentAudioIndex + 1) % audioPlaylist.length;
     playTrack(currentAudioIndex);
   }
 
-  // Loop through tracks in playlist automatically
   audioPlayer.addEventListener('ended', skipToNextTrack);
 
-  // Toggle Audio Play/Pause
   audioToggleBtn.addEventListener('click', () => {
     if (audioPlayer.paused) {
       if (!audioPlayer.src) {
@@ -670,25 +694,21 @@
     }
   });
 
-  // Skip Track Listener
   audioSkipBtn.addEventListener('click', () => {
     triggerBounce(audioSkipBtn);
     skipToNextTrack();
   });
 
-  // Move Audio Controls inside correct container element
   function attachAudioControls(targetContainer) {
     targetContainer.appendChild(audioControlsGroup);
-    setTimeout(updateBorderProgress, 50); // Sync path on container shift
+    setTimeout(updateBorderProgress, 50);
   }
 
-  // Auto-start playback on initial page load
   window.addEventListener('DOMContentLoaded', () => {
     attachAudioControls(standaloneAudioContainer);
     playTrack(currentAudioIndex);
   });
 
-  // Handle browser autoplay policy
   const handleFirstInteraction = () => {
     if (audioPlayer.paused && audioPlayer.currentTime === 0) {
       playTrack(currentAudioIndex);
@@ -718,7 +738,6 @@
   const navBackBtn = document.getElementById('nav-back-btn');
   const navForwardBtn = document.getElementById('nav-forward-btn');
 
-  /* Navigation History State Machine */
   let navStack = ['home'];
   let navIndex = 0;
 
@@ -918,15 +937,60 @@
 
     } else if (state === 'about-app') {
       tileTitle.textContent = "About this App";
-      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ App Information Placeholder ]</p>`;
+      tileBody.innerHTML = `
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">App Name:</span>
+            <span class="info-value">ISW Hub</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Language:</span>
+            <span class="info-value">English (default)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Supported?:</span>
+            <span class="info-value">True</span>
+          </div>
+        </div>
+      `;
 
     } else if (state === 'about-dev') {
       tileTitle.textContent = "About Developer";
-      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ Developer Information Placeholder ]</p>`;
+      tileBody.innerHTML = `
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Developed by:</span>
+            <span class="info-value">International Store of Walmart</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Assisted by:</span>
+            <span class="info-value">Impenze</span>
+          </div>
+        </div>
+      `;
 
     } else if (state === 'about-version') {
       tileTitle.textContent = "About Version";
-      tileBody.innerHTML = `<p style="font-size:1.1rem; color:#444;">[ Version Details Placeholder ]</p>`;
+      tileBody.innerHTML = `
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Current Version:</span>
+            <span class="info-value">Stable 1 (App no one asked for)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Current Build:</span>
+            <span class="info-value">A1</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Type:</span>
+            <span class="info-value">PWA (Progressive Web App)</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Release Channel Type:</span>
+            <span class="info-value">Stable</span>
+          </div>
+        </div>
+      `;
 
     } else {
       tileTitle.textContent = state;
@@ -934,7 +998,6 @@
     }
   }
 
-  /* Settings Toggle Button Listener */
   settingsToggleBtn.addEventListener('click', () => {
     const currentState = navStack[navIndex];
 
@@ -955,7 +1018,6 @@
     }
   });
 
-  /* Settings List Item Click Handlers */
   document.getElementById('btn-about-app').addEventListener('click', () => {
     pushNavState('about-app');
   });
@@ -968,7 +1030,6 @@
     pushNavState('about-version');
   });
 
-  /* Hub Card Event Listeners */
   document.querySelectorAll('.hub-card').forEach(card => {
     card.addEventListener('click', () => {
       const tileAttr = card.getAttribute('data-tile');
@@ -988,7 +1049,6 @@
     });
   });
 
-  /* Universal Navigation Handlers */
   navBackBtn.addEventListener('click', () => {
     if (navIndex > 0) {
       navIndex--;
@@ -1008,12 +1068,10 @@
     location.reload();
   });
 
-  /* Authentication State Listener */
   onAuthStateChanged(auth, (user) => {
     if (user) {
       verificationView.style.display = 'none';
 
-      // Show signed-in nav bar & Move audio controls + progress line inside Universal Nav
       univNav.style.display = 'flex';
       attachAudioControls(univNav);
       standaloneAudioContainer.style.display = 'none';
@@ -1026,7 +1084,6 @@
       settingsView.style.display = 'none';
       tileContentView.style.display = 'none';
 
-      // Hide signed-in nav bar & Move audio controls + progress line to standalone top-left container
       univNav.style.display = 'none';
       attachAudioControls(standaloneAudioContainer);
       standaloneAudioContainer.style.display = 'flex';
@@ -1035,7 +1092,6 @@
     }
   });
 
-  /* Sign In Form Handler */
   async function handleSignIn() {
     statusMsg.style.display = 'none';
     
