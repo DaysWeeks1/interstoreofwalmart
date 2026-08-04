@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ISW - Identity Verification</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+  <title>ISW - International Store of Walmart</title>
   <style>
     :root {
       --isw-blue: #0071dc;
       --isw-dark-blue: #004f9a;
       --isw-yellow: #ffc220;
+      --isw-yellow-bg: #ffda66;
       --isw-yellow-hover: #e0a800;
-      --bg-gray: #f4f6f8;
       --error-red: #d93025;
       --success-green: #188038;
     }
@@ -23,47 +22,23 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
+    /* Set body background to Yellow */
     body {
-      background-color: var(--bg-gray);
+      background-color: var(--isw-yellow-bg);
       color: #333;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
 
-    header {
-      background-color: var(--isw-blue);
-      color: white;
-      padding: 1rem 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 4px solid var(--isw-yellow);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-badge {
-      background-color: var(--isw-yellow);
-      color: #000;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    main {
-      flex: 1;
+    /* -------------------
+       VERIFICATION VIEW 
+    -------------------- */
+    #verification-view {
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
       padding: 1.25rem 1rem;
     }
 
@@ -71,10 +46,10 @@
       background: white;
       padding: 2rem 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
       width: 100%;
       max-width: 440px;
-      border-top: 5px solid var(--isw-blue);
+      border-top: 6px solid var(--isw-blue);
     }
 
     .card-header {
@@ -112,8 +87,6 @@
       border: 1.5px solid #ccc;
       border-radius: 8px;
       font-size: 0.95rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      -webkit-appearance: none;
     }
 
     .form-group input:focus {
@@ -158,41 +131,113 @@
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
       margin-top: 0.5rem;
-      -webkit-tap-highlight-color: transparent;
     }
 
     .btn-submit:hover {
       background-color: var(--isw-yellow-hover);
     }
 
-    .btn-submit:active {
-      transform: scale(0.98);
+    /* -------------------
+       HUB DASHBOARD VIEW 
+    -------------------- */
+    #hub-view {
+      display: none; /* Hidden by default until verified */
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    @media (max-width: 480px) {
-      .verification-card {
-        padding: 1.5rem 1.25rem;
+    .main-heading {
+      color: var(--isw-blue);
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .sub-heading {
+      color: var(--isw-blue);
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .terms-link {
+      color: var(--isw-blue);
+      font-size: 0.85rem;
+      text-decoration: underline;
+      margin-bottom: 2.5rem;
+      cursor: pointer;
+    }
+
+    /* Grid layout matching screenshot */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .hub-card {
+      background-color: var(--isw-blue);
+      color: var(--isw-yellow);
+      border: none;
+      border-radius: 16px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .hub-card:hover {
+      background-color: var(--isw-dark-blue);
+      transform: translateY(-3px);
+    }
+
+    /* Sign out option */
+    .sign-out-btn {
+      margin-top: 3rem;
+      background: transparent;
+      border: 2px solid var(--isw-blue);
+      color: var(--isw-blue);
+      padding: 0.5rem 1.2rem;
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .main-heading {
+        font-size: 2.2rem;
       }
-      .card-header h2 {
-        font-size: 1.35rem;
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      .hub-card {
+        font-size: 0.85rem;
       }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo-container">
-      <h1>ISW</h1>
-      <span class="logo-badge">Walmart Global</span>
-    </div>
-  </header>
-
-  <main>
+  <div id="verification-view">
     <div class="verification-card">
       <div class="card-header">
         <h2>Identity Verification</h2>
-        <p>Please enter your credentials to verify your account access.</p>
+        <p>Please enter your credentials to verify your access to the ISW Hub.</p>
       </div>
 
       <div id="status-msg" class="status-msg"></div>
@@ -213,12 +258,33 @@
           <input type="text" id="ceo-name" placeholder="Enter CEO's full name" required>
         </div>
 
-        <button type="submit" class="btn-submit">Verify & Sign In</button>
+        <button type="submit" class="btn-submit">Verify & Continue</button>
       </form>
     </div>
-  </main>
+  </div>
 
-<script>
+  <div id="hub-view">
+    <h1 class="main-heading">Your happy place.</h1>
+    <p class="sub-heading">Welcome to the International Store of Walmart Hub! Here you can find our products, sign up for our card, and more...</p>
+    <a href="#" class="terms-link">Terms and Conditions</a>
+
+    <div class="grid-container">
+      <button class="hub-card">Newsletter Experiences & Feedback</button>
+      <button class="hub-card">Unsubscribe from the Newsletter</button>
+      <button class="hub-card">Order Food</button>
+      <button class="hub-card">ISW Card</button>
+      <button class="hub-card">Legal Action</button>
+      <button class="hub-card">Legacy Home Page</button>
+      <button class="hub-card">ISW Media</button>
+      <button class="hub-card">ISW Assistant</button>
+      <button class="hub-card">Funny Flyer</button>
+      <button class="hub-card">ISW Productions</button>
+    </div>
+
+    <button class="sign-out-btn" id="sign-out-btn">Sign Out</button>
+  </div>
+
+  <script>
     // Nice try
     const SECURE_KEYS = {
       name: "c29waGlhIGlzYWFr",
@@ -226,34 +292,53 @@
       ceo: "ZGF2aWQgZ2ltcGVsZXZpY2g="
     };
 
+    const verificationView = document.getElementById('verification-view');
+    const hubView = document.getElementById('hub-view');
     const form = document.getElementById('verification-form');
     const statusMsg = document.getElementById('status-msg');
+    const signOutBtn = document.getElementById('sign-out-btn');
+    if (localStorage.getItem('isw_verified') === 'true') {
+      showHubPage();
+    }
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      // Clean input (lowercase and remove extra whitespace)
       const nameInput = document.getElementById('user-name').value.toLowerCase().trim();
       const emailInput = document.getElementById('user-email').value.toLowerCase().trim();
       const ceoInput = document.getElementById('ceo-name').value.toLowerCase().trim();
 
-      // Encode inputs to something using something()
       const encodedName = btoa(nameInput);
       const encodedEmail = btoa(emailInput);
       const encodedCeo = btoa(ceoInput);
 
-      // Verify each field
-      const isNameValid = encodedName === SECURE_KEYS.name;
-      const isEmailValid = encodedEmail === SECURE_KEYS.email;
-      const isCeoValid = encodedCeo === SECURE_KEYS.ceo;
-
-      if (isNameValid && isEmailValid && isCeoValid) {
+      if (encodedName === SECURE_KEYS.name && 
+          encodedEmail === SECURE_KEYS.email && 
+          encodedCeo === SECURE_KEYS.ceo) {
+        
         statusMsg.className = 'status-msg success';
-        statusMsg.textContent = 'Identity Verified Successfully! Access Granted.';
+        statusMsg.textContent = 'Identity Verified Successfully!';
+
+        
+        localStorage.setItem('isw_verified', 'true');
+
+        setTimeout(() => {
+          showHubPage();
+        }, 800);
       } else {
         statusMsg.className = 'status-msg error';
         statusMsg.textContent = 'Verification failed. Incorrect details provided.';
       }
+    });
+
+    function showHubPage() {
+      verificationView.style.display = 'none';
+      hubView.style.display = 'flex';
+    }
+    
+    signOutBtn.addEventListener('click', () => {
+      localStorage.removeItem('isw_verified');
+      location.reload();
     });
   </script>
 </body>
