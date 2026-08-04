@@ -795,11 +795,11 @@
     renderState(state);
   }
 
-  async function openFirestoreLink(fieldName) {
+  async function openFirestoreLink(fieldName, docPath = "hub_access") {
     const newTab = window.open('about:blank', '_blank');
 
     try {
-      const docRef = doc(db, "private_links", "hub_access");
+      const docRef = doc(db, "private_links", docPath);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists() && docSnap.data()[fieldName]) {
@@ -863,6 +863,45 @@
 
       document.getElementById('btn-legal-team').addEventListener('click', () => {
         openFirestoreLink('legalVideo');
+      });
+
+    } else if (state === 'productions') {
+      tileTitle.textContent = "ISW Productions";
+      tileBody.innerHTML = `
+        <div class="grid-container" style="max-width: 600px;">
+          <button class="hub-card" id="btn-download-skit">Download Skit</button>
+          <button class="hub-card" id="btn-legal-message">Message from our Legal Team</button>
+          <button class="hub-card" id="btn-teen-trailer">Teen Intro Trailer</button>
+        </div>
+      `;
+
+      document.getElementById('btn-download-skit').addEventListener('click', () => {
+        openFirestoreLink('downloadSkit');
+      });
+
+      document.getElementById('btn-legal-message').addEventListener('click', () => {
+        openFirestoreLink('legalVideo');
+      });
+
+      document.getElementById('btn-teen-trailer').addEventListener('click', () => {
+        openFirestoreLink('teenIntroTrailer');
+      });
+
+    } else if (state === 'flyer') {
+      tileTitle.textContent = "Funny Flyer";
+      tileBody.innerHTML = `
+        <div class="grid-container" style="max-width: 600px;">
+          <button class="hub-card" id="btn-view-flyer">View Flyer</button>
+          <button class="hub-card" id="btn-download-flyer">Download Flyer</button>
+        </div>
+      `;
+
+      document.getElementById('btn-view-flyer').addEventListener('click', () => {
+        openFirestoreLink('websiteUpdateFlyer');
+      });
+
+      document.getElementById('btn-download-flyer').addEventListener('click', () => {
+        openFirestoreLink('downloadSkit');
       });
 
     } else if (state === 'interactive-download') {
