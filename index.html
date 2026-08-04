@@ -486,22 +486,29 @@
       `;
 
       // Dynamic fetch from Firestore on click
-      document.getElementById('btn-feedback').addEventListener('click', async () => {
-        try {
-          const docRef = doc(db, "private_links", "hub_access");
-          const docSnap = await getDoc(docRef);
+document.getElementById('btn-feedback').addEventListener('click', async () => {
+  try {
+    const docRef = doc(db, "private_links", "hub_access");
+    const docSnap = await getDoc(docRef);
 
-          if (docSnap.exists() && docSnap.data().feedbackLink) {
-            window.location.href = docSnap.data().feedbackLink;
-          } else {
-            alert("Feedback link could not be found.");
-          }
-        } catch (error) {
-          console.error("Error fetching feedback link:", error);
-          alert("Failed to load feedback link. Please try again.");
-        }
-      });
+    if (docSnap.exists() && docSnap.data().feedbackLink) {
+      let rawLink = docSnap.data().feedbackLink.trim();
 
+      
+      if (!/^https?:\/\//i.test(rawLink)) {
+        rawLink = 'https://' + rawLink;
+      }
+
+      
+      window.open(rawLink, '_blank');
+    } else {
+      alert("Feedback link could not be found in Firebase.");
+    }
+  } catch (error) {
+    console.error("Error fetching feedback link:", error);
+    alert("Failed to load feedback link. Please try again.");
+  }
+});
       document.getElementById('btn-interactive-download').addEventListener('click', () => {
         pushNavState('interactive-download');
       });
