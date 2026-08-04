@@ -235,7 +235,7 @@
       <form id="verification-form" autocomplete="off">
         <div class="form-group">
           <label for="user-email">Email Address</label>
-          <input type="email" id="user-email" placeholder="e.g. janedoe@example.com" required>
+          <input type="email" id="user-email" placeholder="janedoe@example.com" required>
         </div>
 
         <div class="form-group">
@@ -244,7 +244,7 @@
         </div>
 
         <div class="recaptcha-container">
-          <div id="recaptcha-container"></div>
+          <div id="recaptcha-element"></div>
         </div>
 
         <button type="submit" class="btn-submit" id="submit-btn">Sign In</button>
@@ -298,7 +298,10 @@
     const app = initializeApp(firebaseConfig);
 
     initializeAppCheck(app, {
-      provider: new ReCaptchaV2Provider('6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60'),
+      provider: new ReCaptchaV2Provider({
+        siteKey: '6LfLeXQtAAAAAL6MCdP8xfW4Mx5f3JmSjGSK_s60',
+        container: 'recaptcha-element'
+      }),
       isTokenAutoRefreshEnabled: true
     });
 
