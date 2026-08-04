@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-  /* Settings Update */
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -314,7 +313,7 @@
       display: flex;
       flex-direction: column;
       width: 100%;
-      gap: 2px; /* Subtle seam between tiles */
+      gap: 2px;
     }
 
     .material-tile {
@@ -337,7 +336,6 @@
       background-color: #f0f4f8;
     }
 
-    /* Material You Rounded Corner Hierarchy */
     .material-tile-top {
       border-top-left-radius: 24px;
       border-top-right-radius: 24px;
@@ -534,18 +532,31 @@
   let navIndex = 0;
 
   function triggerBounce(element) {
+    if (!element) return;
     element.classList.remove('bounce');
     void element.offsetWidth;
     element.classList.add('bounce');
   }
 
   function renderState(state) {
-    // Synchronize Top Right Settings Gear / Close Icon
-    if (state === 'settings') {
+    const isSubSettings = (state === 'about-app' || state === 'about-dev' || state === 'about-version');
+
+    // Visibility and Icon state for top-right Settings Button
+    if (state === 'home') {
+      settingsNavBtnContainer.style.display = 'flex';
+      iconGear.style.display = 'block';
+      iconClose.style.display = 'none';
+      settingsToggleBtn.setAttribute('title', 'Settings');
+    } else if (state === 'settings') {
+      settingsNavBtnContainer.style.display = 'flex';
       iconGear.style.display = 'none';
       iconClose.style.display = 'block';
       settingsToggleBtn.setAttribute('title', 'Close Settings');
+    } else if (isSubSettings) {
+      // Hide settings toggle completely inside sub-menus
+      settingsNavBtnContainer.style.display = 'none';
     } else {
+      settingsNavBtnContainer.style.display = 'flex';
       iconGear.style.display = 'block';
       iconClose.style.display = 'none';
       settingsToggleBtn.setAttribute('title', 'Settings');
@@ -584,7 +595,9 @@
     }
 
     triggerBounce(univNav);
-    triggerBounce(settingsNavBtnContainer);
+    if (settingsNavBtnContainer.style.display !== 'none') {
+      triggerBounce(settingsNavBtnContainer);
+    }
   }
 
   function pushNavState(state) {
@@ -678,15 +691,19 @@
     const currentState = navStack[navIndex];
 
     if (currentState === 'settings') {
-      // Return to previous view
-      if (navIndex > 0) {
-        navIndex--;
+      // Find the last non-settings state in history to return to
+      let prevIdx = navIndex - 1;
+      while (prevIdx >= 0 && (navStack[prevIdx] === 'settings' || navStack[prevIdx].startsWith('about-'))) {
+        prevIdx--;
+      }
+
+      if (prevIdx >= 0) {
+        navIndex = prevIdx;
         renderState(navStack[navIndex]);
       } else {
         renderState('home');
       }
     } else {
-      // Open settings view
       pushNavState('settings');
     }
   });
