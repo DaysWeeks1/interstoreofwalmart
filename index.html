@@ -890,7 +890,7 @@
         <div class="grid-container" style="max-width: 600px;">
           <button class="hub-card" id="btn-download-skit">Download Skit</button>
           <button class="hub-card" id="btn-legal-message">Message from our Legal Team</button>
-          <button class="hub-card" id="btn-teen-trailer">Teen Intro Trailer</button>
+          <button class="hub-card" id="btn-teen-trailer">Request Teen Intro Trailer</button>
         </div>
       `;
 
@@ -903,7 +903,7 @@
       });
 
       document.getElementById('btn-teen-trailer').addEventListener('click', () => {
-        openFirestoreLink('teenIntroTrailer');
+        alert("Reply to a newsletter to request the trailer!");
       });
 
     } else if (state === 'flyer') {
